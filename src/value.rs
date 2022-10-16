@@ -2,9 +2,7 @@ use core::{
     fmt,
     hash::{Hash, Hasher},
 };
-use std::{borrow::Cow, fmt::Debug};
-
-use fnv::FnvHashMap;
+use std::{borrow::Cow, collections::BTreeMap, fmt::Debug};
 
 use crate::index::Index;
 
@@ -66,7 +64,7 @@ pub enum Value<'ctx> {
     /// #
     /// let v = Value::Object([("key", Value::Str("value"))].into_iter().collect());
     /// ```
-    Object(FnvHashMap<&'ctx str, Value<'ctx>>),
+    Object(BTreeMap<&'ctx str, Value<'ctx>>),
 }
 
 impl<'ctx> Value<'ctx> {

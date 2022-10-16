@@ -2,7 +2,7 @@
 use crate::value::Value;
 use core::fmt;
 use serde::de::{Deserialize, MapAccess, SeqAccess, Visitor};
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::BTreeMap};
 
 impl<'de> Deserialize<'de> for Value<'de> {
     #[inline]
@@ -99,9 +99,7 @@ impl<'de> Deserialize<'de> for Value<'de> {
             where
                 V: MapAccess<'de>,
             {
-                use fnv::FnvHashMap;
-
-                let mut values = FnvHashMap::default();
+                let mut values = BTreeMap::default();
 
                 while let Some((key, value)) = visitor.next_entry()? {
                     values.insert(key, value);

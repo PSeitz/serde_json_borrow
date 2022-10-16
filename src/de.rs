@@ -2,6 +2,7 @@
 use crate::value::Value;
 use core::fmt;
 use serde::de::{Deserialize, MapAccess, SeqAccess, Visitor};
+use std::borrow::Cow;
 
 impl<'de> Deserialize<'de> for Value<'de> {
     #[inline]
@@ -39,11 +40,27 @@ impl<'de> Deserialize<'de> for Value<'de> {
             }
 
             #[inline]
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Value::Str(Cow::Owned(v)))
+            }
+
+            #[inline]
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Value::Str(Cow::Owned(v.to_owned())))
+            }
+
+            #[inline]
             fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
             where
                 E: serde::de::Error,
             {
-                Ok(Value::Str(v))
+                Ok(Value::Str(Cow::Borrowed(v)))
             }
 
             #[inline]
@@ -101,6 +118,8 @@ impl<'de> Deserialize<'de> for Value<'de> {
 #[cfg(test)]
 mod tests {
 
+    use std::borrow::Cow;
+
     use crate::Value;
     #[test]
     fn deserialize_json_test() {
@@ -116,7 +135,10 @@ mod tests {
 
         let val: Value = serde_json::from_str(json_obj).unwrap();
         assert_eq!(val.get("bool"), &Value::Bool(true));
-        assert_eq!(val.get("string_key"), &Value::Str("string_val"));
+        assert_eq!(
+            val.get("string_key"),
+            &Value::Str(Cow::Borrowed("string_val"))
+        );
         assert_eq!(val.get("float"), &Value::Number(1.23.into()));
         assert_eq!(val.get("i64"), &Value::Number((-123i64).into()));
         assert_eq!(val.get("u64"), &Value::Number(123u64.into()));

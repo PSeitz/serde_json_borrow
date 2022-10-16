@@ -2,7 +2,7 @@ use core::{
     fmt,
     hash::{Hash, Hasher},
 };
-use std::fmt::Debug;
+use std::{borrow::Cow, fmt::Debug};
 
 use fnv::FnvHashMap;
 
@@ -47,7 +47,7 @@ pub enum Value<'ctx> {
     /// #
     /// let v = Value::Str("ref");
     /// ```
-    Str(&'ctx str),
+    Str(Cow<'ctx, str>),
 
     /// Represents a JSON array.
     ///

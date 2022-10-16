@@ -1,5 +1,6 @@
 [package]
 name = "serde_json_borrow"
+description = "Provides json deserialization into a borrowed DOM"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,3 +10,10 @@ edition = "2021"
 fnv = "1.0.7"
 serde = "1.0.145"
 serde_json = "1.0.86"
+
+[dev-dependencies]
+criterion = "0.4.0"
+
+[[bench]]
+name = "crit_bench"
+harness = false

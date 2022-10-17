@@ -5,7 +5,7 @@ const JSON_TEST_DATA: &str = include_str!("simple-parse-bench.json");
 pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
     let lines: Vec<&str> = JSON_TEST_DATA.lines().map(|line| line.trim()).collect();
 
-    let mut group = c.benchmark_group("simple-json-to-doc");
+    let mut group = c.benchmark_group("flat-json-to-doc");
     group.throughput(Throughput::Bytes(JSON_TEST_DATA.len() as u64));
     group.bench_function("serde-json-owned", |b| {
         b.iter(|| {

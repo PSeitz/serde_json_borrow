@@ -52,7 +52,7 @@ impl<'v> Index<'v> for usize {
 impl<'v, 'a: 'v> Index<'v> for &'a str {
     fn index_into(self, v: &'v Value<'v>) -> Option<&Value<'v>> {
         match v {
-            Value::Object(map) => map.get(self),
+            Value::Object(map) => map.iter().find(|(k, _v)| k == &self).map(|(_k, v)| v),
             _ => None,
         }
     }

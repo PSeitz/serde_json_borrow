@@ -2,7 +2,7 @@ use core::{
     fmt,
     hash::{Hash, Hasher},
 };
-use std::{borrow::Cow, collections::BTreeMap, fmt::Debug};
+use std::{borrow::Cow, fmt::Debug};
 
 use crate::index::Index;
 
@@ -64,7 +64,7 @@ pub enum Value<'ctx> {
     /// #
     /// let v = Value::Object([("key", Value::Str("value"))].into_iter().collect());
     /// ```
-    Object(BTreeMap<&'ctx str, Value<'ctx>>),
+    Object(Vec<(&'ctx str, Value<'ctx>)>),
 }
 
 impl<'ctx> Value<'ctx> {
@@ -105,6 +105,14 @@ impl<'ctx> Value<'ctx> {
         static NULL: Value = Value::Null;
         index.index_into(self).unwrap_or(&NULL)
     }
+
+    /// Returns true if self is Value::Null
+    pub fn is_null(&self) -> bool {
+        match self {
+            Value::Null => true,
+            _ => false,
+        }
+    }
 }
 
 impl<'ctx> std::fmt::Debug for Value<'ctx> {
@@ -143,6 +151,41 @@ enum N {
     NegInt(i64),
     /// Always finite.
     Float(f64),
+}
+
+impl Number {
+    /// If the `Number` is an integer, represent it as i64 if possible. Returns
+    /// None otherwise.
+    pub fn as_u64(&self) -> Option<u64> {
+        match self.n {
+            N::PosInt(v) => Some(v),
+            _ => None,
+        }
+    }
+    /// If the `Number` is an integer, represent it as u64 if possible. Returns
+    /// None otherwise.
+    pub fn as_i64(&self) -> Option<i64> {
+        match self.n {
+            N::PosInt(n) => {
+                if n <= i64::max_value() as u64 {
+                    Some(n as i64)
+                } else {
+                    None
+                }
+            }
+            N::NegInt(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    /// Represents the number as f64 if possible. Returns None otherwise.
+    pub fn as_f64(&self) -> Option<f64> {
+        match self.n {
+            N::PosInt(n) => Some(n as f64),
+            N::NegInt(n) => Some(n as f64),
+            N::Float(n) => Some(n),
+        }
+    }
 }
 
 impl PartialEq for N {

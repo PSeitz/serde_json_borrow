@@ -99,10 +99,10 @@ impl<'de> Deserialize<'de> for Value<'de> {
             where
                 V: MapAccess<'de>,
             {
-                let mut values = BTreeMap::default();
+                let mut values = Vec::default();
 
                 while let Some((key, value)) = visitor.next_entry()? {
-                    values.insert(key, value);
+                    values.push((key, value));
                 }
 
                 Ok(Value::Object(values))

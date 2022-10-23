@@ -3,6 +3,7 @@ name = "serde_json_borrow"
 description = "Provides json deserialization into a borrowed DOM"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

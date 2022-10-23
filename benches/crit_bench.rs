@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use serde_json_borrow::OwnedValue;
 
 const JSON_TEST_DATA: &str = include_str!("simple-parse-bench.json");
 
@@ -22,6 +23,17 @@ pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
             let mut val = None;
             for line in &lines {
                 let json: serde_json_borrow::Value = serde_json::from_str(line).unwrap();
+                val = Some(json);
+            }
+            val
+        })
+    });
+
+    group.bench_function("serde-json-borrowed-owned", |b| {
+        b.iter(|| {
+            let mut val = None;
+            for line in &lines {
+                let json: OwnedValue = OwnedValue::parse_from(line.to_string()).unwrap();
                 val = Some(json);
             }
             val

@@ -43,7 +43,7 @@ pub enum Value<'ctx> {
     /// ```
     /// # use serde_json_borrow::Value;
     /// #
-    /// let v = Value::Str("ref");
+    /// let v = Value::Str("ref".into());
     /// ```
     Str(Cow<'ctx, str>),
 
@@ -53,16 +53,13 @@ pub enum Value<'ctx> {
 
     /// Represents a JSON object.
     ///
-    /// By default the map is backed by a BTreeMap. Enable the `preserve_order`
-    /// feature of serde_json to use IndexMap instead, which preserves
-    /// entries in the order they are inserted into the map. In particular, this
-    /// allows JSON data to be deserialized into a Value and serialized to a
-    /// string while retaining the order of map keys in the input.
+    /// By default the map is backed by a Vec. Allows very fast deserialization.
+    /// Ideal when wanting to iterate over the values, in contrast to look up by key.
     ///
     /// ```
     /// # use serde_json_borrow::Value;
     /// #
-    /// let v = Value::Object([("key", Value::Str("value"))].into_iter().collect());
+    /// let v = Value::Object([("key", Value::Str("value".into()))].into_iter().collect());
     /// ```
     Object(Vec<(&'ctx str, Value<'ctx>)>),
 }
@@ -94,8 +91,8 @@ impl<'ctx> Value<'ctx> {
     ///
     /// let data: Value = serde_json::from_str(json_obj).unwrap();
     ///
-    /// assert_eq!(data.get("x").get("y").get(0), &Value::Str("z"));
-    /// assert_eq!(data.get("x").get("y").get(1), &Value::Str("zz"));
+    /// assert_eq!(data.get("x").get("y").get(0), &Value::Str("z".into()));
+    /// assert_eq!(data.get("x").get("y").get(1), &Value::Str("zz".into()));
     /// assert_eq!(data.get("x").get("y").get(2), &Value::Null);
     ///
     /// assert_eq!(data.get("a"), &Value::Null);
@@ -106,11 +103,115 @@ impl<'ctx> Value<'ctx> {
         index.index_into(self).unwrap_or(&NULL)
     }
 
-    /// Returns true if self is Value::Null
+    /// Returns true if `Value` is Value::Null.
     pub fn is_null(&self) -> bool {
+        matches!(self, Value::Null)
+    }
+
+    /// Returns true if `Value` is Value::Array.
+    pub fn is_array(&self) -> bool {
+        matches!(self, Value::Array(_))
+    }
+
+    /// Returns true if `Value` is Value::Object.
+    pub fn is_object(&self) -> bool {
+        matches!(self, Value::Object(_))
+    }
+
+    /// Returns true if `Value` is Value::Bool.
+    pub fn is_bool(&self) -> bool {
+        matches!(self, Value::Bool(_))
+    }
+
+    /// Returns true if `Value` is Value::Number.
+    pub fn is_number(&self) -> bool {
+        matches!(self, Value::Number(_))
+    }
+
+    /// Returns true if `Value` is Value::Str.
+    pub fn is_string(&self) -> bool {
+        matches!(self, Value::Str(_))
+    }
+
+    /// Returns true if the Value is an integer between i64::MIN and i64::MAX.
+    /// For any Value on which is_i64 returns true, as_i64 is guaranteed to return the integer value.
+    pub fn is_i64(&self) -> bool {
         match self {
-            Value::Null => true,
+            Value::Number(n) => n.is_i64(),
             _ => false,
+        }
+    }
+
+    /// Returns true if the Value is an integer between zero and u64::MAX.
+    /// For any Value on which is_u64 returns true, as_u64 is guaranteed to return the integer value.
+    pub fn is_u64(&self) -> bool {
+        match self {
+            Value::Number(n) => n.is_u64(),
+            _ => false,
+        }
+    }
+
+    /// Returns true if the Value is a f64 number.
+    pub fn is_f64(&self) -> bool {
+        match self {
+            Value::Number(n) => n.is_f64(),
+            _ => false,
+        }
+    }
+
+    /// If the Value is an Array, returns an iterator over the elements in the array.
+    pub fn iter_array(&self) -> Option<impl Iterator<Item = &Value<'_>>> {
+        match self {
+            Value::Array(arr) => Some(arr.iter()),
+            _ => None,
+        }
+    }
+
+    /// If the Value is an Object, returns an iterator over the elements in the object.
+    pub fn iter_object(&self) -> Option<impl Iterator<Item = &(&str, Value<'_>)>> {
+        match self {
+            Value::Object(arr) => Some(arr.iter()),
+            _ => None,
+        }
+    }
+
+    /// If the Value is a Boolean, returns the associated bool. Returns None otherwise.
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// If the Value is a String, returns the associated str. Returns None otherwise.
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Value::Str(text) => Some(text),
+            _ => None,
+        }
+    }
+
+    /// If the Value is an integer, represent it as i64 if possible. Returns None otherwise.
+    pub fn as_i64(&self) -> Option<i64> {
+        match self {
+            Value::Number(n) => n.as_i64(),
+            _ => None,
+        }
+    }
+
+    /// If the Value is an integer, represent it as u64 if possible. Returns None otherwise.
+    pub fn as_u64(&self) -> Option<u64> {
+        match self {
+            Value::Number(n) => n.as_u64(),
+            _ => None,
+        }
+    }
+
+    /// If the Value is a number, represent it as f64 if possible. Returns None otherwise.
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            Value::Number(n) => n.as_f64(),
+            _ => None,
         }
     }
 }
@@ -186,6 +287,26 @@ impl Number {
             N::Float(n) => Some(n),
         }
     }
+
+    /// Returns true if the `Number` is a f64.
+    pub fn is_f64(&self) -> bool {
+        matches!(self.n, N::Float(_))
+    }
+
+    /// Returns true if the `Number` is a u64.
+    pub fn is_u64(&self) -> bool {
+        matches!(self.n, N::PosInt(_))
+    }
+
+    /// Returns true if the `Number` is an integer between `i64::MIN` and
+    /// `i64::MAX`.
+    pub fn is_i64(&self) -> bool {
+        match self.n {
+            N::PosInt(v) => v <= i64::max_value() as u64,
+            N::NegInt(_) => true,
+            N::Float(_) => false,
+        }
+    }
 }
 
 impl PartialEq for N {
@@ -236,5 +357,34 @@ impl From<i64> for Number {
 impl From<f64> for Number {
     fn from(val: f64) -> Self {
         Self { n: N::Float(val) }
+    }
+}
+
+impl From<Number> for serde_json::value::Number {
+    fn from(num: Number) -> Self {
+        match num.n {
+            N::PosInt(n) => n.into(),
+            N::NegInt(n) => n.into(),
+            N::Float(n) => serde_json::value::Number::from_f64(n).unwrap(),
+        }
+    }
+}
+
+impl<'ctx> From<Value<'ctx>> for serde_json::Value {
+    fn from(val: Value) -> Self {
+        match val {
+            Value::Null => serde_json::Value::Null,
+            Value::Bool(val) => serde_json::Value::Bool(val),
+            Value::Number(val) => serde_json::Value::Number(val.into()),
+            Value::Str(val) => serde_json::Value::String(val.to_string()),
+            Value::Array(vals) => {
+                serde_json::Value::Array(vals.into_iter().map(|val| val.into()).collect())
+            }
+            Value::Object(vals) => serde_json::Value::Object(
+                vals.into_iter()
+                    .map(|(key, val)| (key.to_owned(), val.into()))
+                    .collect(),
+            ),
+        }
     }
 }

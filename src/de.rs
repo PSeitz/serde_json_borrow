@@ -2,7 +2,7 @@
 use crate::value::Value;
 use core::fmt;
 use serde::de::{Deserialize, MapAccess, SeqAccess, Visitor};
-use std::{borrow::Cow, collections::BTreeMap};
+use std::borrow::Cow;
 
 impl<'de> Deserialize<'de> for Value<'de> {
     #[inline]
@@ -95,11 +95,12 @@ impl<'de> Deserialize<'de> for Value<'de> {
                 Ok(Value::Array(vec))
             }
 
+            #[inline]
             fn visit_map<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
             where
                 V: MapAccess<'de>,
             {
-                let mut values = Vec::default();
+                let mut values = Vec::new();
 
                 while let Some((key, value)) = visitor.next_entry()? {
                     values.push((key, value));
@@ -116,9 +117,9 @@ impl<'de> Deserialize<'de> for Value<'de> {
 #[cfg(test)]
 mod tests {
 
+    use crate::Value;
     use std::borrow::Cow;
 
-    use crate::Value;
     #[test]
     fn deserialize_json_test() {
         let json_obj = r#"
@@ -140,5 +141,23 @@ mod tests {
         assert_eq!(val.get("float"), &Value::Number(1.23.into()));
         assert_eq!(val.get("i64"), &Value::Number((-123i64).into()));
         assert_eq!(val.get("u64"), &Value::Number(123u64.into()));
+    }
+
+    #[test]
+    fn deserialize_json_allow_escaped_strings_in_values() {
+        let json_obj = r#"
+            {
+                "bool": true,
+                "string_key": "string\"_val",
+                "u64": 123
+            }
+       "#;
+
+        let val: Value = serde_json::from_str(json_obj).unwrap();
+        assert_eq!(val.get("bool"), &Value::Bool(true));
+        assert_eq!(
+            val.get("string_key"),
+            &Value::Str(Cow::Borrowed("string\"_val"))
+        );
     }
 }

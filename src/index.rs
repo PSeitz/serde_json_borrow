@@ -27,8 +27,8 @@ use super::Value;
 ///
 /// let data: Value = serde_json::from_str(json_obj).unwrap();
 ///
-/// assert_eq!(data.get("x").get("y").get(0), &Value::Str("z"));
-/// assert_eq!(data.get("x").get("y").get(1), &Value::Str("zz"));
+/// assert_eq!(data.get("x").get("y").get(0), &Value::Str(std::borrow::Cow::Borrowed("z")));
+/// assert_eq!(data.get("x").get("y").get(1), &Value::Str(std::borrow::Cow::Borrowed("zz")));
 /// assert_eq!(data.get("x").get("y").get(2), &Value::Null);
 ///
 /// assert_eq!(data.get("a"), &Value::Null);

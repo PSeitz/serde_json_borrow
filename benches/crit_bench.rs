@@ -1,22 +1,27 @@
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
+
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use serde_json_borrow::OwnedValue;
 
-const JSON_TEST_DATA_SIMPLE: &str = include_str!("simple-parse-bench.json");
-const JSON_TEST_DATA_HDFS_LOG: &str = include_str!("hdfs.json");
-
-//pub fn bench_for_lines(c: &mut Criterion, lines: Vec<&str>, group_name: &str) {
-pub fn bench_for_lines<'a, F, I>(c: &mut Criterion, iter_gen: F, group_name: &str)
-where
+pub fn bench_for_lines<'a, F, I>(
+    c: &mut Criterion,
+    iter_gen: F,
+    group_name: &str,
+    payload_size: u64,
+) where
     F: Fn() -> I,
-    I: Iterator<Item = &'a str>,
+    I: Iterator<Item = String>,
 {
     let mut group = c.benchmark_group(group_name);
-    group.throughput(Throughput::Bytes(JSON_TEST_DATA_SIMPLE.len() as u64));
+    group.throughput(Throughput::Bytes(payload_size));
     group.bench_function("serde-json-owned", |b| {
         b.iter(|| {
             let mut val = None;
             for line in iter_gen() {
-                let json: serde_json::Value = serde_json::from_str(line).unwrap();
+                let json: serde_json::Value = serde_json::from_str(&line).unwrap();
                 val = Some(json);
             }
             val
@@ -24,12 +29,12 @@ where
     });
     group.bench_function("serde-json-borrowed", |b| {
         b.iter(|| {
-            let mut val = None;
+            let mut is_bool = false;
             for line in iter_gen() {
-                let json: serde_json_borrow::Value = serde_json::from_str(line).unwrap();
-                val = Some(json);
+                let json: serde_json_borrow::Value = serde_json::from_str(&line).unwrap();
+                is_bool = json.is_bool();
             }
-            val
+            is_bool
         })
     });
 
@@ -37,7 +42,7 @@ where
         b.iter(|| {
             let mut val = None;
             for line in iter_gen() {
-                let json: OwnedValue = OwnedValue::parse_from(line.to_string()).unwrap();
+                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
                 val = Some(json);
             }
             val
@@ -46,19 +51,27 @@ where
 }
 
 pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
-    let lines: Vec<&str> = JSON_TEST_DATA_SIMPLE
-        .lines()
-        .map(|line| line.trim())
-        .collect();
+    let lines_for_file = |file| {
+        BufReader::new(File::open(file).unwrap())
+            .lines()
+            .map(|line| line.unwrap())
+    };
 
-    bench_for_lines(c, || lines.iter().cloned(), "simple_json");
+    let file = "./benches/simple-parse-bench.json";
+    bench_for_lines(
+        c,
+        || lines_for_file(file),
+        "simple_json",
+        File::open(file).unwrap().metadata().unwrap().len(),
+    );
 
-    let lines: Vec<&str> = JSON_TEST_DATA_HDFS_LOG
-        .lines()
-        .map(|line| line.trim())
-        .collect();
-
-    bench_for_lines(c, || lines.iter().cloned(), "hdfs_json");
+    let file = "./benches/hdfs.json";
+    bench_for_lines(
+        c,
+        || lines_for_file(file),
+        "hdfs_json",
+        File::open(file).unwrap().metadata().unwrap().len(),
+    );
 }
 
 criterion_group!(benches, simple_json_to_doc_benchmark);

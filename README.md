@@ -4,8 +4,10 @@
 
 Parse json into DOM on borrowed data.
 
-`serde_json` parses into an owned `serde_json::Value`. In cases where the DOM representation is just an intermediate struct, parsing into owned causes a lot of overhead.
-`serde_json_borrow::Value<'ctx>` just references the strings instead. Additionally instead of putting the values into a `BTreeMap` it simply pushed the values into a `Vec`.
+`serde_json` parses into an owned `serde_json::Value`.
+
+In cases where the DOM representation is just an intermediate struct, parsing into owned `String` can cause a lot of overhead.
+`serde_json_borrow::Value<'ctx>` references the strings instead. Instead of putting the values into a `BTreeMap` it pushed the values into a `Vec`.
 Access works via an iterator, which has the same API when iterating the `BTreeMap`.
 
 

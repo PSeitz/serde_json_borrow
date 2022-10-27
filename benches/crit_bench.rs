@@ -27,16 +27,6 @@ pub fn bench_for_lines<'a, F, I>(
             val
         })
     });
-    group.bench_function("serde-json-borrowed", |b| {
-        b.iter(|| {
-            let mut is_bool = false;
-            for line in iter_gen() {
-                let json: serde_json_borrow::Value = serde_json::from_str(&line).unwrap();
-                is_bool = json.is_bool();
-            }
-            is_bool
-        })
-    });
 
     group.bench_function("serde-json-borrowed-owned", |b| {
         b.iter(|| {

@@ -1,4 +1,6 @@
-
+[![Crates.io](https://img.shields.io/crates/v/serde_json_borrow.svg)](https://crates.io/crates/serde_json_borrow)
+ [![Docs](https://docs.rs/serde_json_borrow/badge.svg)](https://docs.rs/crate/serde_json_borrow/)
+ 
 # serde_json_borrow
 
 Parse json into DOM on borrowed data.

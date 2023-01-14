@@ -1,14 +1,15 @@
 [![Crates.io](https://img.shields.io/crates/v/serde_json_borrow.svg)](https://crates.io/crates/serde_json_borrow)
  [![Docs](https://docs.rs/serde_json_borrow/badge.svg)](https://docs.rs/crate/serde_json_borrow/)
  
-# serde_json_borrow
+# Serde JSON Borrow
 
-Parse json into DOM on borrowed data.
+`serde_json_borrow` deserializes JSON from `&'ctx str` into `serde_json_borrow::Value<'ctx>`, by referencing the original bytes, instead of copying them into `Strings`.
 
 The default [serde_json](https://github.com/serde-rs/json) parses into an owned `serde_json::Value`.
-In cases where the DOM representation is just an intermediate struct, parsing into owned String
-can cause a lot of overhead. `serde_json_borrow::Value<'ctx>` borrows the strings instead.
-Instead of putting the values into a `BTreeMap` it pushes the values into a `Vec`. Access works via
+In cases where the DOM representation is just an intermediate struct, parsing into owned `serde_json::Value`
+can cause a lot of overhead.
+
+Additionally it pushes the (key,values) for JSON objects into a `Vec` instead of putting the values into a `BTreeMap`. Access works via
 an iterator, which has the same API when iterating the `BTreeMap`.
 
 ## OwnedValue

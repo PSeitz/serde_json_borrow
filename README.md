@@ -44,3 +44,5 @@ flat-json-to-doc/serde-json-borrowed
 
 ```
 
+# TODO 
+Instead of parsing a JSON object into a `Vec`, a `BTreeMap` could be enabled via a feature flag.

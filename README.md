@@ -3,13 +3,15 @@
  
 # Serde JSON Borrow
 
-`serde_json_borrow` deserializes JSON from `&'ctx str` into `serde_json_borrow::Value<'ctx>` DOM, by referencing the original bytes, instead of copying them into `Strings`.
+Up to 2x faster JSON parsing for [ndjson](http://ndjson.org/) type use cases.
 
-The default [serde_json](https://github.com/serde-rs/json) parses into an owned `serde_json::Value`.
-In cases where the DOM representation is just an intermediate struct, parsing into owned `serde_json::Value`
-can cause a lot of overhead.
+`serde_json_borrow` deserializes JSON from `&'ctx str` into `serde_json_borrow::Value<'ctx>` DOM, by trying to reference the original bytes, instead of copying them into `Strings`.
 
-Additionally `serde_json_borrow` pushes the (key,values) for JSON objects into a `Vec` instead of using a `BTreeMap`. Access works via
+In contrast the default [serde_json](https://github.com/serde-rs/json) parses into an owned `serde_json::Value`. Every `String` encountered is getting copied and 
+therefore allocated. That's great for ergnomonics, but not great for performance.
+Especially in cases where the DOM representation is just an intermediate struct.
+
+To get a little bit more performance, `serde_json_borrow` pushes the (key,values) for JSON objects into a `Vec` instead of using a `BTreeMap`. Access works via
 an iterator, which has the same API when iterating the `BTreeMap`.
 
 ## OwnedValue

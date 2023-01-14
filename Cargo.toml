@@ -1,10 +1,11 @@
 [package]
 name = "serde_json_borrow"
 authors = ["Pascal Seitz <pascal.seitz@gmail.com"]
-description = "Provides json deserialization into a borrowed DOM"
+description = "Provides JSON deserialization into a borrowed DOM"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+exclude = ["benches/**/*.json"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

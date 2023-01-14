@@ -30,8 +30,6 @@ List of _unsupported_ characters in keys.
 
 # Benchmark
 
-Benchmark are not extensive yet, but they look very promising.
-
 ```
 
 Running benches/crit_bench.rs (/home/pascal/cargo_target_dir/release/deps/crit_bench-fd2d661e0b4255c5)

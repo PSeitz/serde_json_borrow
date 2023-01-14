@@ -4,6 +4,8 @@ use crate::Value;
 
 /// Parses a `String` into `Value`, by taking ownership of `String` and reference slices from it in
 /// contrast to copying the contents.
+///
+/// This is done to mitigate lifetime issues.
 pub struct OwnedValue {
     /// Keep owned data, to be able to safely reference it from Value<'static>
     _data: String,
@@ -11,10 +13,10 @@ pub struct OwnedValue {
 }
 
 impl OwnedValue {
+    /// Takes ownership of a `String` and parses it into a DOM.
     pub fn parse_from(data: String) -> io::Result<Self> {
         let value: Value = serde_json::from_str(&data)?;
         let value = unsafe { extend_lifetime(value) };
-
         Ok(Self { _data: data, value })
     }
 

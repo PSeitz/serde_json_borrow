@@ -1,14 +1,24 @@
-use core::{
-    fmt,
-    hash::{Hash, Hasher},
-};
-use std::{borrow::Cow, fmt::Debug};
+use core::fmt;
+use core::hash::{Hash, Hasher};
+use std::borrow::Cow;
+use std::fmt::Debug;
 
 use crate::index::Index;
 
 /// Represents any valid JSON value.
 ///
-/// See the [`serde_json::value` module documentation](self) for usage examples.
+/// # Example
+/// ```
+/// use std::io;
+/// use serde_json_borrow::Value;
+/// fn main() -> io::Result<()> {
+///     let data = r#"{"bool": true, "key": "123"}"#;
+///     let value: Value = serde_json::from_str(&data)?;
+///     assert_eq!(value.get("bool"), &Value::Bool(true));
+///     assert_eq!(value.get("key"), &Value::Str("123".into()));
+///     Ok(())
+/// }
+/// ```
 #[derive(Clone, Eq, PartialEq)]
 pub enum Value<'ctx> {
     /// Represents a JSON null value.
@@ -48,7 +58,6 @@ pub enum Value<'ctx> {
     Str(Cow<'ctx, str>),
 
     /// Represents a JSON array.
-    ///
     Array(Vec<Value<'ctx>>),
 
     /// Represents a JSON object.
@@ -65,16 +74,13 @@ pub enum Value<'ctx> {
 }
 
 impl<'ctx> Value<'ctx> {
-    /// Index into a `serde_json::Value` using the syntax `value[0]` or
-    /// `value["k"]`.
+    /// Index into a `serde_json_borrow::Value` using the syntax `value.get(0)` or
+    /// `value.get("k")`.
     ///
     /// Returns `Value::Null` if the type of `self` does not match the type of
     /// the index, for example if the index is a string and `self` is an array
     /// or a number. Also returns `Value::Null` if the given key does not exist
     /// in the map or the given index is not within the bounds of the array.
-    ///
-    /// For retrieving deeply nested values, you should have a look at the
-    /// `Value::pointer` method.
     ///
     /// # Examples
     ///
@@ -98,6 +104,7 @@ impl<'ctx> Value<'ctx> {
     /// assert_eq!(data.get("a"), &Value::Null);
     /// assert_eq!(data.get("a").get("b"), &Value::Null);
     /// ```
+    #[inline]
     pub fn get<I: Index<'ctx>>(&'ctx self, index: I) -> &'ctx Value<'ctx> {
         static NULL: Value = Value::Null;
         index.index_into(self).unwrap_or(&NULL)
@@ -134,7 +141,8 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// Returns true if the Value is an integer between i64::MIN and i64::MAX.
-    /// For any Value on which is_i64 returns true, as_i64 is guaranteed to return the integer value.
+    /// For any Value on which is_i64 returns true, as_i64 is guaranteed to return the integer
+    /// value.
     pub fn is_i64(&self) -> bool {
         match self {
             Value::Number(n) => n.is_i64(),
@@ -143,7 +151,8 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// Returns true if the Value is an integer between zero and u64::MAX.
-    /// For any Value on which is_u64 returns true, as_u64 is guaranteed to return the integer value.
+    /// For any Value on which is_u64 returns true, as_u64 is guaranteed to return the integer
+    /// value.
     pub fn is_u64(&self) -> bool {
         match self {
             Value::Number(n) => n.is_u64(),
@@ -386,5 +395,43 @@ impl<'ctx> From<Value<'ctx>> for serde_json::Value {
                     .collect(),
             ),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io;
+
+    use super::*;
+
+    #[test]
+    fn number_test() -> io::Result<()> {
+        let data = r#"{"val1": 123.5, "val2": 123, "val3": -123}"#;
+        let value: Value = serde_json::from_str(&data)?;
+        assert!(value.get("val1").is_f64());
+        assert!(!value.get("val1").is_u64());
+        assert!(!value.get("val1").is_i64());
+
+        assert!(!value.get("val2").is_f64());
+        assert!(value.get("val2").is_u64());
+        assert!(value.get("val2").is_i64());
+
+        assert!(!value.get("val3").is_f64());
+        assert!(!value.get("val3").is_u64());
+        assert!(value.get("val3").is_i64());
+
+        assert!(value.get("val1").as_f64().is_some());
+        assert!(value.get("val2").as_f64().is_some());
+        assert!(value.get("val3").as_f64().is_some());
+
+        assert!(value.get("val1").as_u64().is_none());
+        assert!(value.get("val2").as_u64().is_some());
+        assert!(value.get("val3").as_u64().is_none());
+
+        assert!(value.get("val1").as_i64().is_none());
+        assert!(value.get("val2").as_i64().is_some());
+        assert!(value.get("val3").as_i64().is_some());
+
+        Ok(())
     }
 }

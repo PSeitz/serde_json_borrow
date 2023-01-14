@@ -1,7 +1,5 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use serde_json_borrow::OwnedValue;
@@ -17,7 +15,7 @@ pub fn bench_for_lines<'a, F, I>(
 {
     let mut group = c.benchmark_group(group_name);
     group.throughput(Throughput::Bytes(payload_size));
-    group.bench_function("serde-json-owned", |b| {
+    group.bench_function("serde-json", |b| {
         b.iter(|| {
             let mut val = None;
             for line in iter_gen() {
@@ -28,7 +26,7 @@ pub fn bench_for_lines<'a, F, I>(
         })
     });
 
-    group.bench_function("serde-json-borrowed-owned", |b| {
+    group.bench_function("serde-json-borrowed-ownedvalue", |b| {
         b.iter(|| {
             let mut val = None;
             for line in iter_gen() {
@@ -59,7 +57,23 @@ pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
     bench_for_lines(
         c,
         || lines_for_file(file),
-        "hdfs_json",
+        "hdfs",
+        File::open(file).unwrap().metadata().unwrap().len(),
+    );
+
+    let file = "./benches/hdfs_with_array.json";
+    bench_for_lines(
+        c,
+        || lines_for_file(file),
+        "hdfs_with_array",
+        File::open(file).unwrap().metadata().unwrap().len(),
+    );
+
+    let file = "./benches/wiki.json";
+    bench_for_lines(
+        c,
+        || lines_for_file(file),
+        "wiki",
         File::open(file).unwrap().metadata().unwrap().len(),
     );
 }

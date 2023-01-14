@@ -9,7 +9,7 @@ The default [serde_json](https://github.com/serde-rs/json) parses into an owned 
 In cases where the DOM representation is just an intermediate struct, parsing into owned `serde_json::Value`
 can cause a lot of overhead.
 
-Additionally `serde_json_borrow` pushes the (key,values) for JSON objects into a `Vec` instead of putting the values into a `BTreeMap`. Access works via
+Additionally `serde_json_borrow` pushes the (key,values) for JSON objects into a `Vec` instead of using a `BTreeMap`. Access works via
 an iterator, which has the same API when iterating the `BTreeMap`.
 
 ## OwnedValue

@@ -407,7 +407,7 @@ mod tests {
     #[test]
     fn number_test() -> io::Result<()> {
         let data = r#"{"val1": 123.5, "val2": 123, "val3": -123}"#;
-        let value: Value = serde_json::from_str(&data)?;
+        let value: Value = serde_json::from_str(data)?;
         assert!(value.get("val1").is_f64());
         assert!(!value.get("val1").is_u64());
         assert!(!value.get("val1").is_i64());

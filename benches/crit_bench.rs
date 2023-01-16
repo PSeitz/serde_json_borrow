@@ -36,6 +36,21 @@ pub fn bench_for_lines<'a, F, I>(
             val
         })
     });
+
+    group.bench_function("simd-json-borrowed", |b| {
+        b.iter(|| {
+            let mut cnt = 0;
+            for line in iter_gen() {
+                let mut data = line.into_bytes();
+                let _v: simd_json::BorrowedValue =
+                    simd_json::to_borrowed_value(&mut data[..]).unwrap();
+
+                //let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                cnt += 1;
+            }
+            cnt
+        })
+    });
 }
 
 pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {

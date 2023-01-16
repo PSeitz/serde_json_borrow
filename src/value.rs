@@ -1,7 +1,10 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use std::borrow::Cow;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
+use std::io;
+
+use serde_json::{to_writer, to_writer_pretty};
 
 use crate::index::Index;
 
@@ -244,6 +247,68 @@ impl<'ctx> std::fmt::Debug for Value<'ctx> {
                 formatter.write_str("Object ")?;
                 Debug::fmt(map, formatter)
             }
+        }
+    }
+}
+
+impl<'ctx> Display for Value<'ctx> {
+    /// Display a JSON value as a string.
+    ///
+    /// ```
+    /// # use serde_json::json;
+    /// #
+    /// let json = json!({ "city": "London", "street": "10 Downing Street" });
+    ///
+    /// // Compact format:
+    /// //
+    /// // {"city":"London","street":"10 Downing Street"}
+    /// let compact = format!("{}", json);
+    /// assert_eq!(compact,
+    ///     "{\"city\":\"London\",\"street\":\"10 Downing Street\"}");
+    ///
+    /// // Pretty format:
+    /// //
+    /// // {
+    /// //   "city": "London",
+    /// //   "street": "10 Downing Street"
+    /// // }
+    /// let pretty = format!("{:#}", json);
+    /// assert_eq!(pretty,
+    ///     "{\n  \"city\": \"London\",\n  \"street\": \"10 Downing Street\"\n}");
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        struct WriterFormatter<'a, 'b: 'a> {
+            inner: &'a mut fmt::Formatter<'b>,
+        }
+
+        impl<'a, 'b> io::Write for WriterFormatter<'a, 'b> {
+            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+                // Safety: the serializer below only emits valid utf8 when using
+                // the default formatter.
+                let s = unsafe { str::from_utf8_unchecked(buf) };
+                tri!(self.inner.write_str(s).map_err(io_error));
+                Ok(buf.len())
+            }
+
+            fn flush(&mut self) -> io::Result<()> {
+                Ok(())
+            }
+        }
+
+        fn io_error(_: fmt::Error) -> io::Error {
+            // Error value does not matter because Display impl just maps it
+            // back to fmt::Error.
+            io::Error::new(io::ErrorKind::Other, "fmt error")
+        }
+
+        let alternate = f.alternate();
+        let mut wr = WriterFormatter { inner: f };
+        if alternate {
+            // {:#}
+            to_writer_pretty(&mut wr, self).map_err(|_| fmt::Error)
+        } else {
+            // {}
+            to_writer(&mut wr, self).map_err(|_| fmt::Error)
         }
     }
 }

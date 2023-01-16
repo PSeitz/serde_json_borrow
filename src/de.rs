@@ -76,7 +76,7 @@ impl<'de> Deserialize<'de> for Value<'de> {
             #[inline]
             fn visit_seq<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
             where V: SeqAccess<'de> {
-                let mut vec = Vec::new();
+                let mut vec = Vec::with_capacity(visitor.size_hint().unwrap_or(0));
 
                 while let Some(elem) = visitor.next_element()? {
                     vec.push(elem);
@@ -88,7 +88,7 @@ impl<'de> Deserialize<'de> for Value<'de> {
             #[inline]
             fn visit_map<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
             where V: MapAccess<'de> {
-                let mut values = Vec::new();
+                let mut values = Vec::with_capacity(visitor.size_hint().unwrap_or(0));
 
                 while let Some((key, value)) = visitor.next_entry()? {
                     values.push((key, value));

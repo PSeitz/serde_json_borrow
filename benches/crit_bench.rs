@@ -76,6 +76,14 @@ pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
         "wiki",
         File::open(file).unwrap().metadata().unwrap().len(),
     );
+
+    let file = "./benches/gh.json";
+    bench_for_lines(
+        c,
+        || lines_for_file(file),
+        "gh-archive",
+        File::open(file).unwrap().metadata().unwrap().len(),
+    );
 }
 
 criterion_group!(benches, simple_json_to_doc_benchmark);

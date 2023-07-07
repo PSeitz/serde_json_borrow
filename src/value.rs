@@ -251,11 +251,11 @@ impl<'ctx> std::fmt::Debug for Value<'ctx> {
 /// Represents a JSON number, whether integer or floating point.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Number {
-    n: N,
+    pub(crate) n: N,
 }
 
 #[derive(Copy, Clone)]
-enum N {
+pub(crate) enum N {
     PosInt(u64),
     /// Always less than zero.
     NegInt(i64),

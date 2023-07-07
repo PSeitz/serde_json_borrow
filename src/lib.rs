@@ -60,6 +60,7 @@
 mod de;
 mod index;
 mod owned;
+mod ser;
 mod value;
 
 pub use owned::OwnedValue;

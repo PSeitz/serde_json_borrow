@@ -9,7 +9,9 @@ use crate::value::Value;
 impl<'de> Deserialize<'de> for Value<'de> {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Value<'de>, D::Error>
-    where D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         struct ValueVisitor;
 
         impl<'de> Visitor<'de> for ValueVisitor {
@@ -41,19 +43,25 @@ impl<'de> Deserialize<'de> for Value<'de> {
 
             #[inline]
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-            where E: serde::de::Error {
+            where
+                E: serde::de::Error,
+            {
                 Ok(Value::Str(Cow::Owned(v)))
             }
 
             #[inline]
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where E: serde::de::Error {
+            where
+                E: serde::de::Error,
+            {
                 Ok(Value::Str(Cow::Owned(v.to_owned())))
             }
 
             #[inline]
             fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
-            where E: serde::de::Error {
+            where
+                E: serde::de::Error,
+            {
                 Ok(Value::Str(Cow::Borrowed(v)))
             }
 
@@ -64,7 +72,9 @@ impl<'de> Deserialize<'de> for Value<'de> {
 
             #[inline]
             fn visit_some<D>(self, deserializer: D) -> Result<Value<'de>, D::Error>
-            where D: serde::Deserializer<'de> {
+            where
+                D: serde::Deserializer<'de>,
+            {
                 Deserialize::deserialize(deserializer)
             }
 
@@ -75,7 +85,9 @@ impl<'de> Deserialize<'de> for Value<'de> {
 
             #[inline]
             fn visit_seq<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
-            where V: SeqAccess<'de> {
+            where
+                V: SeqAccess<'de>,
+            {
                 let mut vec = Vec::with_capacity(visitor.size_hint().unwrap_or(0));
 
                 while let Some(elem) = visitor.next_element()? {
@@ -87,7 +99,9 @@ impl<'de> Deserialize<'de> for Value<'de> {
 
             #[inline]
             fn visit_map<V>(self, mut visitor: V) -> Result<Value<'de>, V::Error>
-            where V: MapAccess<'de> {
+            where
+                V: MapAccess<'de>,
+            {
                 let mut values = Vec::with_capacity(visitor.size_hint().unwrap_or(0));
 
                 while let Some((key, value)) = visitor.next_entry()? {

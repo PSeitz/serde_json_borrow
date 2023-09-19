@@ -184,6 +184,22 @@ impl<'ctx> Value<'ctx> {
         }
     }
 
+    /// If the Value is an Array, returns the associated Array. Returns None otherwise.
+    pub fn as_array(&self) -> Option<&[Value<'_>]> {
+        match self {
+            Value::Array(arr) => Some(arr),
+            _ => None,
+        }
+    }
+
+    /// If the Value is an Object, returns the associated Object. Returns None otherwise.
+    pub fn as_object(&self) -> Option<&[(&str, Value<'_>)]> {
+        match self {
+            Value::Object(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
     /// If the Value is a Boolean, returns the associated bool. Returns None otherwise.
     pub fn as_bool(&self) -> Option<bool> {
         match self {

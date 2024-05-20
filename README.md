@@ -36,14 +36,26 @@ List of _unsupported_ characters in keys.
 # Benchmark
 
 ```
-
-Running benches/crit_bench.rs (/home/pascal/cargo_target_dir/release/deps/crit_bench-fd2d661e0b4255c5)
-flat-json-to-doc/serde-json-owned
-                        time:   [352.60 µs 353.40 µs 354.26 µs]
-                        thrpt:  [236.01 MiB/s 236.59 MiB/s 237.12 MiB/s]
-flat-json-to-doc/serde-json-borrowed
-                        time:   [175.53 µs 175.72 µs 175.93 µs]
-                        thrpt:  [475.23 MiB/s 475.81 MiB/s 476.34 MiB/s]
+simple_json
+serde_json               Avg: 139.29 MiB/s    Median: 139.53 MiB/s    [134.51 MiB/s .. 140.45 MiB/s]    
+serde_json_borrow        Avg: 210.33 MiB/s    Median: 209.66 MiB/s    [204.08 MiB/s .. 214.28 MiB/s]    
+SIMD_json_borrow         Avg: 140.36 MiB/s    Median: 140.44 MiB/s    [138.96 MiB/s .. 141.75 MiB/s]    
+hdfs
+serde_json               Avg: 284.64 MiB/s    Median: 284.60 MiB/s    [280.98 MiB/s .. 286.46 MiB/s]    
+serde_json_borrow        Avg: 372.99 MiB/s    Median: 371.75 MiB/s    [365.97 MiB/s .. 379.96 MiB/s]    
+SIMD_json_borrow         Avg: 294.41 MiB/s    Median: 294.96 MiB/s    [287.76 MiB/s .. 296.96 MiB/s]    
+hdfs_with_array
+serde_json               Avg: 194.50 MiB/s    Median: 200.41 MiB/s    [155.44 MiB/s .. 211.49 MiB/s]    
+serde_json_borrow        Avg: 275.01 MiB/s    Median: 282.74 MiB/s    [208.35 MiB/s .. 289.78 MiB/s]    
+SIMD_json_borrow         Avg: 206.34 MiB/s    Median: 210.52 MiB/s    [180.99 MiB/s .. 220.30 MiB/s]    
+wiki
+serde_json               Avg: 439.95 MiB/s    Median: 441.28 MiB/s    [429.97 MiB/s .. 444.82 MiB/s]    
+serde_json_borrow        Avg: 484.74 MiB/s    Median: 485.29 MiB/s    [471.38 MiB/s .. 489.16 MiB/s]    
+SIMD_json_borrow         Avg: 576.57 MiB/s    Median: 578.11 MiB/s    [554.03 MiB/s .. 586.18 MiB/s]    
+gh-archive
+serde_json               Avg: 176.21 MiB/s    Median: 176.37 MiB/s    [172.52 MiB/s .. 177.78 MiB/s]    
+serde_json_borrow        Avg: 363.58 MiB/s    Median: 364.02 MiB/s    [355.28 MiB/s .. 374.10 MiB/s]    
+SIMD_json_borrow         Avg: 383.66 MiB/s    Median: 386.94 MiB/s    [363.80 MiB/s .. 400.25 MiB/s]    
 
 ```
 

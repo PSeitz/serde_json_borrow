@@ -35,6 +35,12 @@ List of _unsupported_ characters in keys.
 
 # Benchmark
 
+`cargo bench`
+
+simple_json -> flat object with some keys
+hdfs -> log
+wiki -> few keys with large text body 
+gh-archive -> highly nested object
 ```
 simple_json
 serde_json               Avg: 139.29 MiB/s    Median: 139.53 MiB/s    [134.51 MiB/s .. 140.45 MiB/s]    

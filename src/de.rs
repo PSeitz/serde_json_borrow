@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 use serde::de::{Deserialize, MapAccess, SeqAccess, Visitor};
 
+use crate::object_vec::ObjectAsVec;
 use crate::value::Value;
 
 impl<'de> Deserialize<'de> for Value<'de> {
@@ -94,7 +95,7 @@ impl<'de> Deserialize<'de> for Value<'de> {
                     values.push((key, value));
                 }
 
-                Ok(Value::Object(values))
+                Ok(Value::Object(ObjectAsVec(values)))
             }
         }
 

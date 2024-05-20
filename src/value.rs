@@ -4,6 +4,7 @@ use std::borrow::Cow;
 use std::fmt::Debug;
 
 use crate::index::Index;
+pub use crate::object_vec::ObjectAsVec;
 
 /// Represents any valid JSON value.
 ///
@@ -67,10 +68,11 @@ pub enum Value<'ctx> {
     ///
     /// ```
     /// # use serde_json_borrow::Value;
+    /// # use serde_json_borrow::ObjectAsVec;
     /// #
-    /// let v = Value::Object([("key", Value::Str("value".into()))].into_iter().collect());
+    /// let v = Value::Object(ObjectAsVec([("key", Value::Str("value".into()))].into_iter().collect()));
     /// ```
-    Object(Vec<(&'ctx str, Value<'ctx>)>),
+    Object(ObjectAsVec<'ctx>),
 }
 
 impl<'ctx> Value<'ctx> {
@@ -177,7 +179,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Object, returns an iterator over the elements in the object.
-    pub fn iter_object(&self) -> Option<impl Iterator<Item = &(&str, Value<'_>)>> {
+    pub fn iter_object(&self) -> Option<impl Iterator<Item = (&str, &Value<'_>)>> {
         match self {
             Value::Object(arr) => Some(arr.iter()),
             _ => None,
@@ -193,7 +195,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Object, returns the associated Object. Returns None otherwise.
-    pub fn as_object(&self) -> Option<&[(&str, Value<'_>)]> {
+    pub fn as_object(&self) -> Option<&ObjectAsVec> {
         match self {
             Value::Object(obj) => Some(obj),
             _ => None,

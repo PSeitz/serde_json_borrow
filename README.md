@@ -67,3 +67,60 @@ SIMD_json_borrow         Avg: 383.66 MiB/s    Median: 386.94 MiB/s    [363.80 Mi
 
 # TODO 
 Instead of parsing a JSON object into a `Vec`, a `BTreeMap` could be enabled via a feature flag.
+
+# Mutability
+`OwnedValue` is immutable by design.
+If you need to mutate the `Value` you can convert it to `serde_json::Value`.
+
+## Example
+Here is an example why mutability won't work:
+
+https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=bb0b919acc8930e71bdefdfc6a6d5240
+```rust
+use std::io;
+
+use std::borrow::Cow;
+
+
+/// Parses a `String` into `Value`, by taking ownership of `String` and reference slices from it in
+/// contrast to copying the contents.
+///
+/// This is done to mitigate lifetime issues.
+pub struct OwnedValue {
+    /// Keep owned data, to be able to safely reference it from Value<'static>
+    _data: String,
+    value: Vec<Cow<'static, str>>,
+}
+
+impl OwnedValue {
+    /// Takes ownership of a `String` and parses it into a DOM.
+    pub fn parse_from(data: String) -> io::Result<Self> {
+        let value = vec![Cow::from(data.as_str())];
+        let value = unsafe { extend_lifetime(value) };
+        Ok(Self { _data: data, value })
+    }
+
+    /// Returns the `Value` reference.
+    pub fn get_value<'a>(&'a self) -> &'a Vec<Cow<'a, str>> {
+        &self.value
+    }
+    /// This cast will break the borrow checker
+    pub fn get_value_mut<'a>(&'a mut self) -> &'a mut Vec<Cow<'a, str>> {
+        unsafe{std::mem::transmute::<&mut Vec<Cow<'static, str>>, &mut Vec<Cow<'a, str>>>(&mut self.value)}
+    }
+}
+
+unsafe fn extend_lifetime<'b>(r: Vec<Cow<'b, str>>) -> Vec<Cow<'static, str>> {
+    std::mem::transmute::<Vec<Cow<'b, str>>, Vec<Cow<'static, str>>>(r)
+}
+
+fn main() {
+    let mut v1 = OwnedValue::parse_from(String::from("oop")).unwrap();
+    let mut v2 = OwnedValue::parse_from(String::from("oop")).unwrap();
+    let oop = v1.get_value().last().unwrap().clone();
+    v2.get_value_mut().push(oop);
+    drop(v1);
+    let oop = v2.get_value_mut().pop().unwrap();
+    println!("oop: '{oop}'");
+}
+```

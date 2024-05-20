@@ -52,12 +52,6 @@ impl<'ctx> ObjectAsVec<'ctx> {
         self.0.iter().map(|(k, v)| (*k, v))
     }
 
-    /// An iterator visiting all key-value pairs
-    #[inline]
-    pub fn into_iter(self) -> impl Iterator<Item = (&'ctx str, Value<'ctx>)> {
-        self.0.into_iter()
-    }
-
     /// Returns the number of elements in the object
     #[inline]
     pub fn len(&self) -> usize {
@@ -90,6 +84,16 @@ impl<'ctx> ObjectAsVec<'ctx> {
     #[inline]
     pub fn contains_key(&self, key: &str) -> bool {
         self.0.iter().any(|(k, _)| *k == key)
+    }
+}
+
+impl<'ctx> IntoIterator for ObjectAsVec<'ctx> {
+    type Item = (&'ctx str, Value<'ctx>);
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 

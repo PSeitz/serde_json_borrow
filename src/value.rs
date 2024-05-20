@@ -243,7 +243,7 @@ impl<'ctx> Value<'ctx> {
     }
 }
 
-impl<'ctx> std::fmt::Debug for Value<'ctx> {
+impl<'ctx> Debug for Value<'ctx> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Null => formatter.write_str("Null"),
@@ -267,7 +267,7 @@ impl<'ctx> std::fmt::Debug for Value<'ctx> {
 }
 
 /// Represents a JSON number, whether integer or floating point.
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Number {
     pub(crate) n: N,
 }

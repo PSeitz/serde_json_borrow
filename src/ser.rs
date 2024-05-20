@@ -12,7 +12,7 @@ impl<'ctx> Serialize for Value<'ctx> {
             Value::Number(n) => n.serialize(serializer),
             Value::Str(s) => serializer.serialize_str(s),
             Value::Array(v) => serializer.collect_seq(v),
-            Value::Object(m) => serializer.collect_map(m.iter().map(|(k, v)| (k, v))),
+            Value::Object(m) => serializer.collect_map(m.iter()),
         }
     }
 }

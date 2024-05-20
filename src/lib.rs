@@ -1,3 +1,13 @@
+#![deny(
+    missing_copy_implementations,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_import_braces,
+    unused_imports,
+    unused_qualifications,
+    missing_docs
+)]
+
 //! # Serde JSON Borrowed
 //!
 //! Parses JSON into [`serde_json_borrow::Value<'ctx>`](Value) from `&'ctx str`.
@@ -8,8 +18,8 @@
 //! borrows the `Strings` instead.
 //!
 //! Additionally it pushes the (key,value) for JSON objects into a `Vec` instead of putting the
-//! values into a `BTreeMap`. Access works via an iterator, which has the same API when iterating
-//! the `BTreeMap`.
+//! values into a `BTreeMap`. Access works via `ObjectAsVec`, which provides the same API
+//! as `BTreeMap`.
 //!
 //! The primary benefit of using `serde_json_borrow` is a higher JSON _deserialization performance_
 //! due to less allocations. By borrowing a DOM, the library ensures that no additional memory is
@@ -48,8 +58,9 @@
 //! }
 //! ```
 //! # Performance
-//! Performance gain depends on how many allocations can be avoided. It also depends on the
-//! allocator used.
+//! Performance gain depends on how many allocations can be avoided, and how many objects there are,
+//! as deserializing into a vec is significantly faster.
+//!
 //! The [benchmarks](https://github.com/pseitz/serde_json_borrow#benchmark) in the github repository show around **`1.8x`** speedup, although they don't account
 //! for that in practice it won't be a simple consecutive alloc json, dealloc json. There will be
 //! other allocations in between.

@@ -1,7 +1,7 @@
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use std::borrow::Cow;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::index::Index;
 pub use crate::object_vec::ObjectAsVec;
@@ -263,6 +263,13 @@ impl<'ctx> Debug for Value<'ctx> {
                 Debug::fmt(map, formatter)
             }
         }
+    }
+}
+
+// We just convert to serde_json::Value to Display
+impl Display for Value<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", serde_json::Value::from(self.clone()))
     }
 }
 

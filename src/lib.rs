@@ -59,9 +59,11 @@
 
 mod de;
 mod index;
+mod object_vec;
 mod owned;
 mod ser;
 mod value;
 
+pub use object_vec::ObjectAsVec;
 pub use owned::OwnedValue;
 pub use value::Value;

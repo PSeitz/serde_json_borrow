@@ -97,7 +97,6 @@ impl<'ctx> ObjectAsVec<'ctx> {
 mod tests {
     use super::*;
 
-    // Test initialization and basic properties
     #[test]
     fn test_empty_initialization() {
         let obj: ObjectAsVec = ObjectAsVec(Vec::new());
@@ -112,7 +111,6 @@ mod tests {
         assert_eq!(obj.len(), 1);
     }
 
-    // Test accessing elements
     #[test]
     fn test_get_existing_key() {
         let obj = ObjectAsVec(vec![("key", Value::Bool(true))]);
@@ -131,7 +129,6 @@ mod tests {
         assert_eq!(obj.get_key_value("key"), Some(("key", &Value::Bool(true))));
     }
 
-    // Test iterators
     #[test]
     fn test_keys_iterator() {
         let obj = ObjectAsVec(vec![("key1", Value::Null), ("key2", Value::Bool(false))]);
@@ -156,7 +153,6 @@ mod tests {
         );
     }
 
-    // Test modifications
     #[test]
     fn test_into_vec() {
         let obj = ObjectAsVec(vec![("key", Value::Null)]);

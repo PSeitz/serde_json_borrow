@@ -26,9 +26,9 @@
 //! allocated for `Strings`, that contain no JSON escape codes.
 //!
 //! ## OwnedValue
-//! You can take advantage of [`OwnedValue`](crate::OwnedValue) to parse a `String` containing
+//! You can take advantage of [`OwnedValue`] to parse a `String` containing
 //! unparsed `JSON` into a `Value` without having to worry about lifetimes,
-//! as [`OwnedValue`](crate::OwnedValue) will take ownership of the `String` and reference slices of
+//! as [`OwnedValue`] will take ownership of the `String` and reference slices of
 //! it, rather than making copies.
 //!
 //! # Limitations

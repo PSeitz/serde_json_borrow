@@ -5,9 +5,7 @@ use crate::value::{Number, Value, N};
 
 impl<'ctx> Serialize for Value<'ctx> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         match self {
             Value::Null => serializer.serialize_unit(),
             Value::Bool(b) => serializer.serialize_bool(*b),
@@ -21,18 +19,14 @@ impl<'ctx> Serialize for Value<'ctx> {
 
 impl Serialize for OwnedValue {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         Value::serialize(self.get_value(), serializer)
     }
 }
 
 impl Serialize for Number {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         match self.n {
             N::PosInt(n) => serializer.serialize_u64(n),
             N::NegInt(n) => serializer.serialize_i64(n),

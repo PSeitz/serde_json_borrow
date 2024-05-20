@@ -1,90 +1,70 @@
 use std::fs::File;
+use std::hint::black_box;
 use std::io::{BufRead, BufReader};
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use binggan::InputGroup;
 use serde_json_borrow::OwnedValue;
 
-pub fn bench_for_lines<'a, F, I>(
-    c: &mut Criterion,
-    iter_gen: F,
-    group_name: &str,
-    payload_size: u64,
-) where
-    F: Fn() -> I,
-    I: Iterator<Item = String>,
-{
-    let mut group = c.benchmark_group(group_name);
-    group.throughput(Throughput::Bytes(payload_size));
-    group.bench_function("serde-json", |b| {
-        b.iter(|| {
-            let mut val = None;
-            for line in iter_gen() {
-                let json: serde_json::Value = serde_json::from_str(&line).unwrap();
-                val = Some(json);
-            }
-            val
-        })
-    });
-
-    group.bench_function("serde-json-borrowed-ownedvalue", |b| {
-        b.iter(|| {
-            let mut val = None;
-            for line in iter_gen() {
-                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
-                val = Some(json);
-            }
-            val
-        })
-    });
-}
-
-pub fn simple_json_to_doc_benchmark(c: &mut Criterion) {
+fn main() {
     let lines_for_file = |file| {
         BufReader::new(File::open(file).unwrap())
             .lines()
             .map(|line| line.unwrap())
     };
 
-    let file = "./benches/simple-parse-bench.json";
-    bench_for_lines(
-        c,
-        || lines_for_file(file),
-        "simple_json",
-        File::open(file).unwrap().metadata().unwrap().len(),
-    );
+    let mut named_data = Vec::new();
 
-    let file = "./benches/hdfs.json";
-    bench_for_lines(
-        c,
-        || lines_for_file(file),
-        "hdfs",
-        File::open(file).unwrap().metadata().unwrap().len(),
-    );
+    let mut add = |name, path| {
+        named_data.push((
+            name,
+            (
+                move || lines_for_file(path),
+                File::open(path).unwrap().metadata().unwrap().len(),
+            ),
+        ));
+    };
 
-    let file = "./benches/hdfs_with_array.json";
-    bench_for_lines(
-        c,
-        || lines_for_file(file),
-        "hdfs_with_array",
-        File::open(file).unwrap().metadata().unwrap().len(),
-    );
+    add("simple_json", "./benches/simple-parse-bench.json");
+    add("hdfs", "./benches/hdfs.json");
+    add("hdfs_with_array", "./benches/hdfs_with_array.json");
+    add("wiki", "./benches/wiki.json");
+    add("gh-archive", "./benches/gh.json");
 
-    let file = "./benches/wiki.json";
-    bench_for_lines(
-        c,
-        || lines_for_file(file),
-        "wiki",
-        File::open(file).unwrap().metadata().unwrap().len(),
-    );
-
-    let file = "./benches/gh.json";
-    bench_for_lines(
-        c,
-        || lines_for_file(file),
-        "gh-archive",
-        File::open(file).unwrap().metadata().unwrap().len(),
-    );
+    bench_for_lines(InputGroup::new_with_inputs(named_data));
 }
 
-criterion_group!(benches, simple_json_to_doc_benchmark);
-criterion_main!(benches);
+fn bench_for_lines<F, I>(mut runner: InputGroup<(F, u64)>)
+where
+    F: Fn() -> I + 'static,
+    I: Iterator<Item = String>,
+{
+    runner.throughput(|data| data.1 as usize);
+    runner.register("serde_json", move |data| {
+        let mut val = None;
+        let iter = data.0();
+        for line in iter {
+            let json: serde_json::Value = serde_json::from_str(&line).unwrap();
+            val = Some(json);
+        }
+        black_box(val);
+    });
+    runner.register("serde_json_borrow", move |data| {
+        let mut val = None;
+        let iter = data.0();
+        for line in iter {
+            let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+            val = Some(json);
+        }
+        black_box(val);
+    });
+    runner.register("SIMD_json_borrow", move |data| {
+        let iter = data.0();
+        for line in iter {
+            let mut data: Vec<u8> = line.into();
+            let v: simd_json::BorrowedValue = simd_json::to_borrowed_value(&mut data).unwrap();
+            black_box(v);
+        }
+    });
+
+    runner.run();
+}

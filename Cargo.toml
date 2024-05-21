@@ -3,7 +3,7 @@ name = "serde_json_borrow"
 categories = ["parsing", "parser-implementations", "encoding"]
 authors = ["Pascal Seitz <pascal.seitz@gmail.com>"]
 description = "Provides JSON deserialization into a borrowed DOM"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2021"
 license = "MIT"
 keywords = ["JSON", "serde", "deserialization", "ref", "borrowed"]
@@ -14,13 +14,14 @@ repository = "https://github.com/PSeitz/serde_json_borrow"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+halfbrown = "0.2.5"
 serde = "1.0.145"
 serde_json = "1.0.86"
+simd-json = "0.13.10"
 
 [dev-dependencies]
 binggan = "0.8.0"
-simd-json = "0.13.10"
 
 [[bench]]
-name = "crit_bench"
+name = "binggan_bench"
 harness = false

@@ -69,6 +69,7 @@
 //! on my machine.
 
 mod de;
+mod de_simd;
 mod index;
 mod object_vec;
 mod owned;

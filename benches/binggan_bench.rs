@@ -57,7 +57,25 @@ where
         }
         black_box(val);
     });
-    runner.register("SIMD_json_borrow", move |data| {
+    runner.register("simd_serde_json_borrow", move |data| {
+        let mut val = None;
+        let iter = data.0();
+        for line in iter {
+            let json: OwnedValue = OwnedValue::from_string_simd(line).unwrap();
+            val = Some(json);
+        }
+        black_box(val);
+    });
+    runner.register("simd_serde_json_borrow_value_builder", move |data| {
+        let mut val = None;
+        let iter = data.0();
+        for line in iter {
+            let json: OwnedValue = OwnedValue::from_string_simd2(line).unwrap();
+            val = Some(json);
+        }
+        black_box(val);
+    });
+    runner.register("simd_json_BorrowedValue", move |data| {
         let iter = data.0();
         for line in iter {
             let mut data: Vec<u8> = line.into();

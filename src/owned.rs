@@ -40,6 +40,26 @@ impl OwnedValue {
     }
 
     /// Takes serialized JSON `String` and parses it into a [crate::Value].
+    pub fn from_string_simd(mut json_str: String) -> io::Result<Self> {
+        let value: Value = unsafe { simd_json::serde::from_str(json_str.as_mut_str())? };
+        let value = unsafe { extend_lifetime(value) };
+        Ok(Self {
+            _data: json_str,
+            value,
+        })
+    }
+    /// Takes serialized JSON `String` and parses it into a [crate::Value].
+    pub fn from_string_simd2(json_str: String) -> io::Result<Self> {
+        let mut data = json_str.into_bytes();
+        let value: Value = simd_json::value::deserialize(&mut data)?;
+        let value = unsafe { extend_lifetime(value) };
+        Ok(Self {
+            _data: unsafe { String::from_utf8_unchecked(data) },
+            value,
+        })
+    }
+
+    /// Takes serialized JSON `String` and parses it into a [crate::Value].
     pub fn parse_from(json_str: String) -> io::Result<Self> {
         Self::from_string(json_str)
     }

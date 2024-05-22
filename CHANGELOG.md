@@ -1,3 +1,10 @@
+0.4.5 (2024-05-24)
+==================
+add `get_mut`, `insert` to serde_json_borrow::Map
+add `insert_or_get_mut` to serde_json_borrow::Map as `entry()` alternative
+add From<&Value> for `serde_json::Value`
+add From<serde_json_borrow::Map> for serde_json::Map
+
 0.4.4 (2024-05-24)
 ==================
 Export `ObjectAsVec` as `serde_json_borrow::Map` to easy migration from `serde_json::Map`

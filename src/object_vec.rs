@@ -108,7 +108,8 @@ impl<'ctx> ObjectAsVec<'ctx> {
 
     /// Inserts a key-value pair into the object.
     /// If the object did not have this key present, `None` is returned.
-    /// If the object did have this key present, the value is updated, and the old value is returned.
+    /// If the object did have this key present, the value is updated, and the old value is
+    /// returned.
     ///
     /// ## Performance
     /// This operation is linear in the size of the Vec because it potentially requires iterating
@@ -123,6 +124,23 @@ impl<'ctx> ObjectAsVec<'ctx> {
         // If the key is not found, push the new key-value pair to the end of the Vec
         self.0.push((key, value));
         None
+    }
+
+    /// Inserts a key-value pair into the object if the key does not yet exist, otherwise returns a
+    /// mutable reference to the existing value.
+    ///
+    /// ## Performance
+    /// This operation might be linear in the size of the Vec because it requires iterating through
+    /// all elements to find a matching key, and might add to the end if not found.
+    #[inline]
+    pub fn insert_or_get_mut(&mut self, key: &'ctx str, value: Value<'ctx>) -> &mut Value<'ctx> {
+        // get position to circumvent lifetime issue
+        if let Some(pos) = self.0.iter_mut().position(|(k, _)| *k == key) {
+            &mut self.0[pos].1
+        } else {
+            self.0.push((key, value));
+            &mut self.0.last_mut().unwrap().1
+        }
     }
 
     /// Inserts a key-value pair into the object and returns the mutable reference of the inserted
@@ -174,8 +192,9 @@ impl<'ctx> From<&ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Valu
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::borrow::Cow;
+
+    use super::*;
 
     #[test]
     fn test_empty_initialization() {

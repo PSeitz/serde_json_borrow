@@ -9,6 +9,12 @@ use crate::Value;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectAsVec<'ctx>(pub Vec<(&'ctx str, Value<'ctx>)>);
 
+impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
+    fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
+        Self(vec)
+    }
+}
+
 impl<'ctx> ObjectAsVec<'ctx> {
     /// Access to the underlying Vec
     #[inline]

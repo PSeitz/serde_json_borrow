@@ -1,11 +1,13 @@
 use crate::Value;
 
-/// For performance reasons we use a Vec instead of a Hashmap.
+/// Represents a JSON key/value type.
 ///
+/// For performance reasons we use a Vec instead of a Hashmap.
 /// This comes with a tradeoff of slower key accesses as we need to iterate and compare.
 ///
 /// The ObjectAsVec struct is a wrapper around a Vec of (&str, Value) pairs.
-/// It provides methods to make it easy to migrate from serde_json::Value::Object.
+/// It provides methods to make it easy to migrate from serde_json::Value::Object or
+/// serde_json::Map.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectAsVec<'ctx>(pub Vec<(&'ctx str, Value<'ctx>)>);
 

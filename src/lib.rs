@@ -75,6 +75,6 @@ mod owned;
 mod ser;
 mod value;
 
-pub use object_vec::ObjectAsVec;
+pub use object_vec::{ObjectAsVec, ObjectAsVec as Map};
 pub use owned::OwnedValue;
 pub use value::Value;

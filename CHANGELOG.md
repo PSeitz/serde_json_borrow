@@ -1,3 +1,11 @@
+0.4.4 (2024-05-24)
+==================
+Export `ObjectAsVec` as `serde_json_borrow::Map` to easy migration from `serde_json::Map`
+
+0.4.3 (2024-05-24)
+==================
+add `From<Vec`> for `ObjectAsVec`
+
 0.4.2 (2024-05-20)
 ==================
 * Add `OwnedValue::from_slice`, `OwnedValue::from_str` and `OneValue::from_string`

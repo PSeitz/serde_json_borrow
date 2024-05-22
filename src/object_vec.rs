@@ -8,7 +8,7 @@ use crate::Value;
 /// The ObjectAsVec struct is a wrapper around a Vec of (&str, Value) pairs.
 /// It provides methods to make it easy to migrate from serde_json::Value::Object or
 /// serde_json::Map.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ObjectAsVec<'ctx>(pub Vec<(&'ctx str, Value<'ctx>)>);
 
 impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {

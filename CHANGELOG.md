@@ -1,6 +1,7 @@
 0.4.4 (2024-05-24)
 ==================
 Export `ObjectAsVec` as `serde_json_borrow::Map` to easy migration from `serde_json::Map`
+Impl `Default` for `serde_json_borrow::Map`
 
 0.4.3 (2024-05-24)
 ==================

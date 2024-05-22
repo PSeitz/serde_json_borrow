@@ -414,11 +414,22 @@ impl<'ctx> From<Value<'ctx>> for serde_json::Value {
             Value::Array(vals) => {
                 serde_json::Value::Array(vals.into_iter().map(|val| val.into()).collect())
             }
-            Value::Object(vals) => serde_json::Value::Object(
-                vals.into_iter()
-                    .map(|(key, val)| (key.to_owned(), val.into()))
-                    .collect(),
-            ),
+            Value::Object(vals) => serde_json::Value::Object(vals.into()),
+        }
+    }
+}
+
+impl<'ctx> From<&Value<'ctx>> for serde_json::Value {
+    fn from(val: &Value) -> Self {
+        match val {
+            Value::Null => serde_json::Value::Null,
+            Value::Bool(val) => serde_json::Value::Bool(*val),
+            Value::Number(val) => serde_json::Value::Number((*val).into()),
+            Value::Str(val) => serde_json::Value::String(val.to_string()),
+            Value::Array(vals) => {
+                serde_json::Value::Array(vals.into_iter().map(|val| val.into()).collect())
+            }
+            Value::Object(vals) => serde_json::Value::Object(vals.into()),
         }
     }
 }

@@ -427,7 +427,7 @@ impl<'ctx> From<&Value<'ctx>> for serde_json::Value {
             Value::Number(val) => serde_json::Value::Number((*val).into()),
             Value::Str(val) => serde_json::Value::String(val.to_string()),
             Value::Array(vals) => {
-                serde_json::Value::Array(vals.into_iter().map(|val| val.into()).collect())
+                serde_json::Value::Array(vals.iter().map(|val| val.into()).collect())
             }
             Value::Object(vals) => serde_json::Value::Object(vals.into()),
         }

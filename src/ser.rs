@@ -2,6 +2,7 @@ use serde::ser::{Serialize, Serializer};
 
 use crate::owned::OwnedValue;
 use crate::value::{Number, Value, N};
+use crate::Map;
 
 impl<'ctx> Serialize for Value<'ctx> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -12,8 +13,14 @@ impl<'ctx> Serialize for Value<'ctx> {
             Value::Number(n) => n.serialize(serializer),
             Value::Str(s) => serializer.serialize_str(s),
             Value::Array(v) => serializer.collect_seq(v),
-            Value::Object(m) => serializer.collect_map(m.iter()),
+            Value::Object(m) => m.serialize(serializer),
         }
+    }
+}
+impl<'ctx> Serialize for Map<'ctx> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer {
+        serializer.collect_map(self.iter())
     }
 }
 

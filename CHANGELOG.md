@@ -2,6 +2,7 @@
 ==================
 add `Clone, Debug, Eq, PartialEq, Hash` to OwnedValue 
 add `Hash` to Value 
+implement numeric visitor, visit_u8, i8 etc.
 
 0.4.5 (2024-05-22)
 ==================

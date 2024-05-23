@@ -1,16 +1,21 @@
-0.4.5 (2024-05-24)
+0.4.6 (2024-05-23)
+==================
+add `Clone, Debug, Eq, PartialEq, Hash` to OwnedValue 
+add `Hash` to Value 
+
+0.4.5 (2024-05-22)
 ==================
 add `get_mut`, `insert` to serde_json_borrow::Map
 add `insert_or_get_mut` to serde_json_borrow::Map as `entry()` alternative
 add From<&Value> for `serde_json::Value`
 add From<serde_json_borrow::Map> for serde_json::Map
 
-0.4.4 (2024-05-24)
+0.4.4 (2024-05-22)
 ==================
 Export `ObjectAsVec` as `serde_json_borrow::Map` to easy migration from `serde_json::Map`
 Impl `Default` for `serde_json_borrow::Map`
 
-0.4.3 (2024-05-24)
+0.4.3 (2024-05-22)
 ==================
 add `From<Vec`> for `ObjectAsVec`
 

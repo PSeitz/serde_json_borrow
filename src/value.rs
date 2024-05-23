@@ -20,7 +20,7 @@ pub use crate::object_vec::ObjectAsVec;
 ///     Ok(())
 /// }
 /// ```
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub enum Value<'ctx> {
     /// Represents a JSON null value.
     ///

@@ -7,6 +7,7 @@ use crate::Value;
 /// contrast to copying the contents.
 ///
 /// This is done to mitigate lifetime issues.
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct OwnedValue {
     /// Keep owned data, to be able to safely reference it from Value<'static>
     _data: String,
@@ -72,6 +73,17 @@ mod tests {
     fn test_deref_access() {
         let raw_json = r#"{"name": "John", "age": 30}"#;
         let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
+
+        assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
+        assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+    }
+
+    /// Test that clone clones OwnedValue
+    #[test]
+    fn test_deref_clone() {
+        let raw_json = r#"{"name": "John", "age": 30}"#;
+        let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
+        let owned_value = owned_value.clone();
 
         assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
         assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));

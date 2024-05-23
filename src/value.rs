@@ -71,7 +71,7 @@ pub enum Value<'ctx> {
     /// # use serde_json_borrow::Value;
     /// # use serde_json_borrow::ObjectAsVec;
     /// #
-    /// let v = Value::Object(ObjectAsVec([("key", Value::Str("value".into()))].into_iter().collect()));
+    /// let v = Value::Object(ObjectAsVec([("key".into(), Value::Str("value".into()))].into_iter().collect()));
     /// ```
     Object(ObjectAsVec<'ctx>),
 }

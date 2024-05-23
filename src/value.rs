@@ -20,7 +20,7 @@ pub use crate::object_vec::ObjectAsVec;
 ///     Ok(())
 /// }
 /// ```
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Default)]
 pub enum Value<'ctx> {
     /// Represents a JSON null value.
     ///
@@ -29,6 +29,7 @@ pub enum Value<'ctx> {
     /// #
     /// let v = Value::Null;
     /// ```
+    #[default]
     Null,
 
     /// Represents a JSON boolean.
@@ -261,6 +262,11 @@ impl<'a> From<String> for Value<'a> {
 impl<'a, T: Into<Value<'a>>> From<Vec<T>> for Value<'a> {
     fn from(val: Vec<T>) -> Self {
         Value::Array(val.into_iter().map(Into::into).collect())
+    }
+}
+impl<'a, T: Clone + Into<Value<'a>>> From<&[T]> for Value<'a> {
+    fn from(val: &[T]) -> Self {
+        Value::Array(val.iter().map(Clone::clone).map(Into::into).collect())
     }
 }
 

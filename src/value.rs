@@ -243,6 +243,27 @@ impl<'ctx> Value<'ctx> {
     }
 }
 
+impl<'a> From<bool> for Value<'a> {
+    fn from(val: bool) -> Self {
+        Value::Bool(val)
+    }
+}
+impl<'a> From<&'a str> for Value<'a> {
+    fn from(val: &'a str) -> Self {
+        Value::Str(Cow::Borrowed(val))
+    }
+}
+impl<'a> From<String> for Value<'a> {
+    fn from(val: String) -> Self {
+        Value::Str(Cow::Owned(val))
+    }
+}
+impl<'a, T: Into<Value<'a>>> From<Vec<T>> for Value<'a> {
+    fn from(val: Vec<T>) -> Self {
+        Value::Array(val.into_iter().map(Into::into).collect())
+    }
+}
+
 impl<'ctx> Debug for Value<'ctx> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -373,6 +394,22 @@ impl Hash for N {
                 }
             }
         }
+    }
+}
+
+impl<'a> From<u64> for Value<'a> {
+    fn from(val: u64) -> Self {
+        Value::Number(val.into())
+    }
+}
+impl<'a> From<i64> for Value<'a> {
+    fn from(val: i64) -> Self {
+        Value::Number(val.into())
+    }
+}
+impl<'a> From<f64> for Value<'a> {
+    fn from(val: f64) -> Self {
+        Value::Number(val.into())
     }
 }
 

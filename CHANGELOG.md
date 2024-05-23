@@ -1,3 +1,7 @@
+0.4.7 (2024-05-23)
+==================
+add `From` methods for type like u64 to easily convert into `Value<'a>`
+
 0.4.6 (2024-05-23)
 ==================
 add `Clone, Debug, Eq, PartialEq, Hash` to OwnedValue 

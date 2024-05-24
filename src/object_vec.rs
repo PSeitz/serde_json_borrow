@@ -1,4 +1,18 @@
+#![allow(clippy::useless_conversion)]
+#![allow(clippy::useless_asref)]
+
+use std::borrow::Cow;
+
 use crate::Value;
+
+#[cfg(feature = "cowkeys")]
+/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+pub type KeyStrType<'a> = Cow<'a, str>;
+
+#[cfg(not(feature = "cowkeys"))]
+/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+/// Cow strings
+pub type KeyStrType<'a> = &'a str;
 
 /// Represents a JSON key/value type.
 ///
@@ -9,25 +23,30 @@ use crate::Value;
 /// It provides methods to make it easy to migrate from serde_json::Value::Object or
 /// serde_json::Map.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
-pub struct ObjectAsVec<'ctx>(pub Vec<(&'ctx str, Value<'ctx>)>);
+pub struct ObjectAsVec<'ctx>(pub(crate) Vec<(KeyStrType<'ctx>, Value<'ctx>)>);
 
 impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
     fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
-        Self(vec)
+        Self(vec.into_iter().map(|(k, v)| (k.into(), v)).collect())
     }
 }
 
 impl<'ctx> ObjectAsVec<'ctx> {
-    /// Access to the underlying Vec
+    /// Access to the underlying Vec.
+    ///
+    /// # Note
+    /// Since KeyStrType can be changed via a feature flag avoid using `as_vec` and use other
+    /// methods instead. This could be a problem with feature unification, when one crate uses it
+    /// as &str and another uses it as Cow<str>, both will get Cow<str?
     #[inline]
-    pub fn as_vec(&self) -> &Vec<(&str, Value)> {
+    pub fn as_vec(&self) -> &Vec<(KeyStrType, Value)> {
         &self.0
     }
 
-    /// Access to the underlying Vec
+    /// Access to the underlying Vec. Keys are normalized to Cow.
     #[inline]
-    pub fn into_vec(self) -> Vec<(&'ctx str, Value<'ctx>)> {
-        self.0
+    pub fn into_vec(self) -> Vec<(Cow<'ctx, str>, Value<'ctx>)> {
+        self.0.into_iter().map(|el| (el.0.into(), el.1)).collect()
     }
 
     /// Returns a reference to the value corresponding to the key.
@@ -61,15 +80,19 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// expensive than a `Hashmap` for larger Objects.
     #[inline]
     pub fn get_key_value(&self, key: &str) -> Option<(&str, &Value)> {
-        self.0
-            .iter()
-            .find_map(|(k, v)| if *k == key { Some((*k, v)) } else { None })
+        self.0.iter().find_map(|(k, v)| {
+            if *k == key {
+                Some((k.as_ref(), v))
+            } else {
+                None
+            }
+        })
     }
 
     /// An iterator visiting all key-value pairs
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
-        self.0.iter().map(|(k, v)| (*k, v))
+        self.0.iter().map(|(k, v)| (k.as_ref(), v))
     }
 
     /// Returns the number of elements in the object
@@ -87,7 +110,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// An iterator visiting all keys
     #[inline]
     pub fn keys(&self) -> impl Iterator<Item = &str> {
-        self.0.iter().map(|(k, _)| *k)
+        self.0.iter().map(|(k, _)| k.as_ref())
     }
 
     /// An iterator visiting all values
@@ -122,7 +145,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
             }
         }
         // If the key is not found, push the new key-value pair to the end of the Vec
-        self.0.push((key, value));
+        self.0.push((key.into(), value));
         None
     }
 
@@ -138,7 +161,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
         if let Some(pos) = self.0.iter_mut().position(|(k, _)| *k == key) {
             &mut self.0[pos].1
         } else {
-            self.0.push((key, value));
+            self.0.push((key.into(), value));
             &mut self.0.last_mut().unwrap().1
         }
     }
@@ -159,26 +182,16 @@ impl<'ctx> ObjectAsVec<'ctx> {
         key: &'ctx str,
         value: Value<'ctx>,
     ) -> &mut Value<'ctx> {
-        self.0.push((key, value));
+        self.0.push((key.into(), value));
         let idx = self.0.len() - 1;
         &mut self.0[idx].1
     }
 }
 
-impl<'ctx> IntoIterator for ObjectAsVec<'ctx> {
-    type Item = (&'ctx str, Value<'ctx>);
-
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
 impl<'ctx> From<ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Value> {
     fn from(val: ObjectAsVec<'ctx>) -> Self {
-        val.into_iter()
-            .map(|(key, val)| (key.to_owned(), val.into()))
+        val.iter()
+            .map(|(key, val)| (key.to_string(), val.into()))
             .collect()
     }
 }
@@ -205,46 +218,55 @@ mod tests {
 
     #[test]
     fn test_non_empty_initialization() {
-        let obj = ObjectAsVec(vec![("key", Value::Null)]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Null)]);
         assert!(!obj.is_empty());
         assert_eq!(obj.len(), 1);
     }
 
     #[test]
     fn test_get_existing_key() {
-        let obj = ObjectAsVec(vec![("key", Value::Bool(true))]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Bool(true))]);
         assert_eq!(obj.get("key"), Some(&Value::Bool(true)));
     }
 
     #[test]
     fn test_get_non_existing_key() {
-        let obj = ObjectAsVec(vec![("key", Value::Bool(true))]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Bool(true))]);
         assert_eq!(obj.get("not_a_key"), None);
     }
 
     #[test]
     fn test_get_key_value() {
-        let obj = ObjectAsVec(vec![("key", Value::Bool(true))]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Bool(true))]);
         assert_eq!(obj.get_key_value("key"), Some(("key", &Value::Bool(true))));
     }
 
     #[test]
     fn test_keys_iterator() {
-        let obj = ObjectAsVec(vec![("key1", Value::Null), ("key2", Value::Bool(false))]);
+        let obj = ObjectAsVec(vec![
+            ("key1".into(), Value::Null),
+            ("key2".into(), Value::Bool(false)),
+        ]);
         let keys: Vec<_> = obj.keys().collect();
         assert_eq!(keys, vec!["key1", "key2"]);
     }
 
     #[test]
     fn test_values_iterator() {
-        let obj = ObjectAsVec(vec![("key1", Value::Null), ("key2", Value::Bool(true))]);
+        let obj = ObjectAsVec(vec![
+            ("key1".into(), Value::Null),
+            ("key2".into(), Value::Bool(true)),
+        ]);
         let values: Vec<_> = obj.values().collect();
         assert_eq!(values, vec![&Value::Null, &Value::Bool(true)]);
     }
 
     #[test]
     fn test_iter() {
-        let obj = ObjectAsVec(vec![("key1", Value::Null), ("key2", Value::Bool(true))]);
+        let obj = ObjectAsVec(vec![
+            ("key1".into(), Value::Null),
+            ("key2".into(), Value::Bool(true)),
+        ]);
         let pairs: Vec<_> = obj.iter().collect();
         assert_eq!(
             pairs,
@@ -254,14 +276,14 @@ mod tests {
 
     #[test]
     fn test_into_vec() {
-        let obj = ObjectAsVec(vec![("key", Value::Null)]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Null)]);
         let vec = obj.into_vec();
-        assert_eq!(vec, vec![("key", Value::Null)]);
+        assert_eq!(vec, vec![("key".into(), Value::Null)]);
     }
 
     #[test]
     fn test_contains_key() {
-        let obj = ObjectAsVec(vec![("key", Value::Bool(false))]);
+        let obj = ObjectAsVec(vec![("key".into(), Value::Bool(false))]);
         assert!(obj.contains_key("key"));
         assert!(!obj.contains_key("no_key"));
     }
@@ -279,7 +301,10 @@ mod tests {
 
     #[test]
     fn test_insert_update() {
-        let mut obj = ObjectAsVec(vec![("key1", Value::Str(Cow::Borrowed("old_value1")))]);
+        let mut obj = ObjectAsVec(vec![(
+            "key1".into(),
+            Value::Str(Cow::Borrowed("old_value1")),
+        )]);
         assert_eq!(
             obj.insert("key1", Value::Str(Cow::Borrowed("new_value1"))),
             Some(Value::Str(Cow::Borrowed("old_value1")))

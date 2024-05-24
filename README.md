@@ -19,8 +19,10 @@ You can take advantage of `OwnedValue` to parse a `String` containing unparsed `
 as `OwnedValue` will take ownership of the `String` and reference slices of it, rather than making copies.
 
 # Limitations
-Keys in objects are not allowed to have any JSON escaping characters. So if your keys contain any control characters (https://www.json.org/json-en.html), this crate will not work for you.
-List of _unsupported_ characters in keys.
+The feature flag `cowkeys` uses `Cow<str>` instead of `&str` as keys in objects. This enables support for escaped data in keys.
+Without the `cowkeys` feature flag `&str` is used, which does not allow any JSON escaping characters in keys.
+
+List of _unsupported_ characters (https://www.json.org/json-en.html) in keys without `cowkeys` feature flag.
 
 ```
 \" represents the quotation mark character (U+0022).

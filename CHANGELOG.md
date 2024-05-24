@@ -1,3 +1,8 @@
+0.5.0 (2024-05-24)
+==================
+add `cowkeys` featureflag 
+`cowkeys` uses `Cow<str>` instead of `&str` as keys in objects. This enables support for escaped data in keys.
+
 0.4.7 (2024-05-23)
 ==================
 add `From` methods for type like u64 to easily convert into `Value<'a>`

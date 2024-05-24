@@ -43,7 +43,7 @@ impl<'de> Deserialize<'de> for Value<'de> {
             #[inline]
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
             where E: serde::de::Error {
-                Ok(Value::Str(Cow::Owned(v)))
+                Ok(Value::Str(v.into()))
             }
 
             #[inline]

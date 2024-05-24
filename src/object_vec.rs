@@ -1,6 +1,18 @@
+#![allow(clippy::useless_conversion)]
+#![allow(clippy::useless_asref)]
+
 use std::borrow::Cow;
 
 use crate::Value;
+
+#[cfg(feature = "cowkeys")]
+/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+pub type KeyStrType<'a> = Cow<'a, str>;
+
+#[cfg(not(feature = "cowkeys"))]
+/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+/// Cow strings
+pub type KeyStrType<'a> = &'a str;
 
 /// Represents a JSON key/value type.
 ///
@@ -11,29 +23,30 @@ use crate::Value;
 /// It provides methods to make it easy to migrate from serde_json::Value::Object or
 /// serde_json::Map.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
-pub struct ObjectAsVec<'ctx>(pub Vec<(Cow<'ctx, str>, Value<'ctx>)>);
+pub struct ObjectAsVec<'ctx>(pub(crate) Vec<(KeyStrType<'ctx>, Value<'ctx>)>);
 
 impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
     fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
-        Self(
-            vec.into_iter()
-                .map(|(k, v)| (Cow::Borrowed(k), v))
-                .collect(),
-        )
+        Self(vec.into_iter().map(|(k, v)| (k.into(), v)).collect())
     }
 }
 
 impl<'ctx> ObjectAsVec<'ctx> {
-    /// Access to the underlying Vec
+    /// Access to the underlying Vec.
+    ///
+    /// # Note
+    /// Since KeyStrType can be changed via a feature flag avoid using `as_vec` and use other
+    /// methods instead. This could be a problem with feature unification, when one crate uses it
+    /// as &str and another uses it as Cow<str>, both will get Cow<str?
     #[inline]
-    pub fn as_vec(&self) -> &Vec<(Cow<str>, Value)> {
+    pub fn as_vec(&self) -> &Vec<(KeyStrType, Value)> {
         &self.0
     }
 
-    /// Access to the underlying Vec
+    /// Access to the underlying Vec. Keys are normalized to Cow.
     #[inline]
     pub fn into_vec(self) -> Vec<(Cow<'ctx, str>, Value<'ctx>)> {
-        self.0
+        self.0.into_iter().map(|el| (el.0.into(), el.1)).collect()
     }
 
     /// Returns a reference to the value corresponding to the key.
@@ -175,19 +188,9 @@ impl<'ctx> ObjectAsVec<'ctx> {
     }
 }
 
-impl<'ctx> IntoIterator for ObjectAsVec<'ctx> {
-    type Item = (Cow<'ctx, str>, Value<'ctx>);
-
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
 impl<'ctx> From<ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Value> {
     fn from(val: ObjectAsVec<'ctx>) -> Self {
-        val.into_iter()
+        val.iter()
             .map(|(key, val)| (key.to_string(), val.into()))
             .collect()
     }

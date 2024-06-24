@@ -172,7 +172,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Array, returns an iterator over the elements in the array.
-    pub fn iter_array(&self) -> Option<impl Iterator<Item = &Value<'_>>> {
+    pub fn iter_array(&self) -> Option<impl Iterator<Item=&Value<'_>>> {
         match self {
             Value::Array(arr) => Some(arr.iter()),
             _ => None,
@@ -180,7 +180,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Object, returns an iterator over the elements in the object.
-    pub fn iter_object(&self) -> Option<impl Iterator<Item = (&str, &Value<'_>)>> {
+    pub fn iter_object(&self) -> Option<impl Iterator<Item=(&str, &Value<'_>)>> {
         match self {
             Value::Object(arr) => Some(arr.iter()),
             _ => None,
@@ -249,21 +249,25 @@ impl<'a> From<bool> for Value<'a> {
         Value::Bool(val)
     }
 }
+
 impl<'a> From<&'a str> for Value<'a> {
     fn from(val: &'a str) -> Self {
         Value::Str(Cow::Borrowed(val))
     }
 }
+
 impl<'a> From<String> for Value<'a> {
     fn from(val: String) -> Self {
         Value::Str(Cow::Owned(val))
     }
 }
+
 impl<'a, T: Into<Value<'a>>> From<Vec<T>> for Value<'a> {
     fn from(val: Vec<T>) -> Self {
         Value::Array(val.into_iter().map(Into::into).collect())
     }
 }
+
 impl<'a, T: Clone + Into<Value<'a>>> From<&[T]> for Value<'a> {
     fn from(val: &[T]) -> Self {
         Value::Array(val.iter().map(Clone::clone).map(Into::into).collect())
@@ -408,11 +412,13 @@ impl<'a> From<u64> for Value<'a> {
         Value::Number(val.into())
     }
 }
+
 impl<'a> From<i64> for Value<'a> {
     fn from(val: i64) -> Self {
         Value::Number(val.into())
     }
 }
+
 impl<'a> From<f64> for Value<'a> {
     fn from(val: f64) -> Self {
         Value::Number(val.into())
@@ -477,11 +483,62 @@ impl<'ctx> From<&Value<'ctx>> for serde_json::Value {
     }
 }
 
+impl<'ctx> From<&'ctx serde_json::Value> for Value<'ctx> {
+    fn from(value: &'ctx serde_json::Value) -> Self {
+        match value {
+            serde_json::Value::Null => Value::Null,
+            serde_json::Value::Bool(b) => Value::Bool(*b),
+            serde_json::Value::Number(n) => {
+                if let Some(n) = n.as_i64() {
+                    Value::Number(n.into())
+                } else if let Some(n) = n.as_u64() {
+                    Value::Number(n.into())
+                } else if let Some(n) = n.as_f64() {
+                    Value::Number(n.into())
+                } else {
+                    unreachable!()
+                }
+            }
+            serde_json::Value::String(val) => {
+                Value::Str(Cow::Borrowed(val))
+            }
+            serde_json::Value::Array(arr) => {
+                let out: Vec<Value<'ctx>> = arr.iter().map(|v| v.into()).collect();
+                Value::Array(out)
+            }
+            serde_json::Value::Object(obj) => {
+                let mut ans = ObjectAsVec::default();
+                for (k, v) in obj {
+                    ans.insert(k.as_str(), v.into());
+                }
+                Value::Object(ObjectAsVec::from(ans))
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io;
 
     use super::*;
+
+    #[test]
+    fn from_serde() {
+        let value = &serde_json::json!({
+            "a": 1,
+            "b": "2",
+            "c": [3, 4],
+            "d": {"e": "alo"}
+        });
+
+        let value: Value = value.into();
+        assert_eq!(value.get("a"), &Value::Number(1i64.into()));
+        assert_eq!(value.get("b"), &Value::Str("2".into()));
+        assert_eq!(value.get("c").get(0), &Value::Number(3i64.into()));
+        assert_eq!(value.get("c").get(1), &Value::Number(4i64.into()));
+        assert_eq!(value.get("d").get("e"), &Value::Str("alo".into()));
+    }
 
     #[test]
     fn number_test() -> io::Result<()> {

@@ -188,7 +188,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Array, returns the associated Array. Returns None otherwise.
-    pub fn as_array(&self) -> Option<&[Value<'_>]> {
+    pub fn as_array(&self) -> Option<&[Value<'ctx>]> {
         match self {
             Value::Array(arr) => Some(arr),
             _ => None,
@@ -196,7 +196,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Object, returns the associated Object. Returns None otherwise.
-    pub fn as_object(&self) -> Option<&ObjectAsVec> {
+    pub fn as_object(&self) -> Option<&ObjectAsVec<'ctx>> {
         match self {
             Value::Object(obj) => Some(obj),
             _ => None,

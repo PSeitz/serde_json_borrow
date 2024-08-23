@@ -174,8 +174,8 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// multiple keys afterwards.
     ///
     /// ## Performance
-    /// This operation is linear in the size of the Vec because it potentially requires iterating
-    /// through all elements to find a matching key.
+    /// This operation is amortized constant time, worst case linear time in the size of the Vec
+    /// because it potentially requires a reallocation to grow the Vec.
     #[inline]
     pub fn insert_unchecked_and_get_mut(
         &mut self,

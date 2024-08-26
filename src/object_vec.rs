@@ -39,7 +39,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// methods instead. This could be a problem with feature unification, when one crate uses it
     /// as &str and another uses it as Cow<str>, both will get Cow<str?
     #[inline]
-    pub fn as_vec(&self) -> &Vec<(KeyStrType, Value)> {
+    pub fn as_vec(&self) -> &Vec<(KeyStrType, Value<'ctx>)> {
         &self.0
     }
 
@@ -55,7 +55,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// As this is backed by a Vec, this searches linearly through the Vec as may be much more
     /// expensive than a `Hashmap` for larger Objects.
     #[inline]
-    pub fn get(&self, key: &str) -> Option<&Value> {
+    pub fn get(&self, key: &str) -> Option<&Value<'ctx>> {
         self.0
             .iter()
             .find_map(|(k, v)| if *k == key { Some(v) } else { None })
@@ -79,7 +79,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// As this is backed by a Vec, this searches linearly through the Vec as may be much more
     /// expensive than a `Hashmap` for larger Objects.
     #[inline]
-    pub fn get_key_value(&self, key: &str) -> Option<(&str, &Value)> {
+    pub fn get_key_value(&self, key: &str) -> Option<(&str, &Value<'ctx>)> {
         self.0.iter().find_map(|(k, v)| {
             if *k == key {
                 Some((k.as_ref(), v))
@@ -91,7 +91,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
 
     /// An iterator visiting all key-value pairs
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &Value<'ctx>)> {
         self.0.iter().map(|(k, v)| (k.as_ref(), v))
     }
 
@@ -115,7 +115,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
 
     /// An iterator visiting all values
     #[inline]
-    pub fn values(&self) -> impl Iterator<Item = &Value> {
+    pub fn values(&self) -> impl Iterator<Item = &Value<'ctx>> {
         self.0.iter().map(|(_, v)| v)
     }
 

@@ -1,3 +1,7 @@
+0.6.0 (2024-08-28)
+==================
+improve returned lifetimes https://github.com/PSeitz/serde_json_borrow/pull/19  (Thanks @meskill) 
+
 0.5.0 (2024-05-24)
 ==================
 add `cowkeys` featureflag 

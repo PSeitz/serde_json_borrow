@@ -1,3 +1,7 @@
+0.7.0 (2024-10-28)
+==================
+impl `Deserializer` for `Value`. This enables deserialization into other types.
+
 0.6.0 (2024-08-28)
 ==================
 improve returned lifetimes https://github.com/PSeitz/serde_json_borrow/pull/19  (Thanks @meskill) 

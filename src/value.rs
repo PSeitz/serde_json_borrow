@@ -244,7 +244,7 @@ impl<'ctx> Value<'ctx> {
     }
 }
 
-impl<'a> From<bool> for Value<'a> {
+impl From<bool> for Value<'_> {
     fn from(val: bool) -> Self {
         Value::Bool(val)
     }
@@ -256,7 +256,7 @@ impl<'a> From<&'a str> for Value<'a> {
     }
 }
 
-impl<'a> From<String> for Value<'a> {
+impl From<String> for Value<'_> {
     fn from(val: String) -> Self {
         Value::Str(Cow::Owned(val))
     }
@@ -274,7 +274,7 @@ impl<'a, T: Clone + Into<Value<'a>>> From<&[T]> for Value<'a> {
     }
 }
 
-impl<'ctx> Debug for Value<'ctx> {
+impl Debug for Value<'_> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Null => formatter.write_str("Null"),
@@ -339,7 +339,7 @@ impl Number {
     pub fn as_i64(&self) -> Option<i64> {
         match self.n {
             N::PosInt(n) => {
-                if n <= i64::max_value() as u64 {
+                if n <= i64::MAX as u64 {
                     Some(n as i64)
                 } else {
                     None
@@ -373,7 +373,7 @@ impl Number {
     /// `i64::MAX`.
     pub fn is_i64(&self) -> bool {
         match self.n {
-            N::PosInt(v) => v <= i64::max_value() as u64,
+            N::PosInt(v) => v <= i64::MAX as u64,
             N::NegInt(_) => true,
             N::Float(_) => false,
         }
@@ -413,19 +413,19 @@ impl Hash for N {
     }
 }
 
-impl<'a> From<u64> for Value<'a> {
+impl From<u64> for Value<'_> {
     fn from(val: u64) -> Self {
         Value::Number(val.into())
     }
 }
 
-impl<'a> From<i64> for Value<'a> {
+impl From<i64> for Value<'_> {
     fn from(val: i64) -> Self {
         Value::Number(val.into())
     }
 }
 
-impl<'a> From<f64> for Value<'a> {
+impl From<f64> for Value<'_> {
     fn from(val: f64) -> Self {
         Value::Number(val.into())
     }
@@ -459,7 +459,7 @@ impl From<Number> for serde_json::value::Number {
     }
 }
 
-impl<'ctx> From<Value<'ctx>> for serde_json::Value {
+impl From<Value<'_>> for serde_json::Value {
     fn from(val: Value) -> Self {
         match val {
             Value::Null => serde_json::Value::Null,
@@ -474,7 +474,7 @@ impl<'ctx> From<Value<'ctx>> for serde_json::Value {
     }
 }
 
-impl<'ctx> From<&Value<'ctx>> for serde_json::Value {
+impl From<&Value<'_>> for serde_json::Value {
     fn from(val: &Value) -> Self {
         match val {
             Value::Null => serde_json::Value::Null,
@@ -515,7 +515,7 @@ impl<'ctx> From<&'ctx serde_json::Value> for Value<'ctx> {
                 for (k, v) in obj {
                     ans.insert(k.as_str(), v.into());
                 }
-                Value::Object(ObjectAsVec::from(ans))
+                Value::Object(ans)
             }
         }
     }

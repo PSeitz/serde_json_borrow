@@ -72,6 +72,7 @@
 //! on my machine.
 
 mod de;
+mod deserializer;
 mod index;
 mod object_vec;
 mod owned;

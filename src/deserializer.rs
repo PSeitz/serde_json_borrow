@@ -4,7 +4,7 @@ use serde::Deserializer;
 use crate::value::N;
 use crate::{KeyStrType, Value};
 
-impl<'de, 'ctx> IntoDeserializer<'de, de::value::Error> for &'de Value<'ctx> {
+impl<'de> IntoDeserializer<'de, de::value::Error> for &'de Value<'_> {
     type Deserializer = Self;
 
     fn into_deserializer(self) -> Self::Deserializer {
@@ -12,7 +12,7 @@ impl<'de, 'ctx> IntoDeserializer<'de, de::value::Error> for &'de Value<'ctx> {
     }
 }
 
-impl<'ctx, 'de> Deserializer<'de> for &'de Value<'ctx> {
+impl<'de> Deserializer<'de> for &'de Value<'_> {
     type Error = de::value::Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>

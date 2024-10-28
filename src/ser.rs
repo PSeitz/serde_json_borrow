@@ -4,7 +4,7 @@ use crate::owned::OwnedValue;
 use crate::value::{Number, Value, N};
 use crate::Map;
 
-impl<'ctx> Serialize for Value<'ctx> {
+impl Serialize for Value<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         match self {
@@ -17,7 +17,7 @@ impl<'ctx> Serialize for Value<'ctx> {
         }
     }
 }
-impl<'ctx> Serialize for Map<'ctx> {
+impl Serialize for Map<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         serializer.collect_map(self.iter())

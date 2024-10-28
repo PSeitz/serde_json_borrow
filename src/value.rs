@@ -172,7 +172,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Array, returns an iterator over the elements in the array.
-    pub fn iter_array(&self) -> Option<impl Iterator<Item=&Value<'_>>> {
+    pub fn iter_array(&self) -> Option<impl Iterator<Item = &Value<'_>>> {
         match self {
             Value::Array(arr) => Some(arr.iter()),
             _ => None,
@@ -180,7 +180,7 @@ impl<'ctx> Value<'ctx> {
     }
 
     /// If the Value is an Object, returns an iterator over the elements in the object.
-    pub fn iter_object(&self) -> Option<impl Iterator<Item=(&str, &Value<'_>)>> {
+    pub fn iter_object(&self) -> Option<impl Iterator<Item = (&str, &Value<'_>)>> {
         match self {
             Value::Object(arr) => Some(arr.iter()),
             _ => None,
@@ -308,6 +308,12 @@ impl Display for Value<'_> {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Number {
     pub(crate) n: N,
+}
+
+impl From<N> for Number {
+    fn from(n: N) -> Self {
+        Self { n }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -499,9 +505,7 @@ impl<'ctx> From<&'ctx serde_json::Value> for Value<'ctx> {
                     unreachable!()
                 }
             }
-            serde_json::Value::String(val) => {
-                Value::Str(Cow::Borrowed(val))
-            }
+            serde_json::Value::String(val) => Value::Str(Cow::Borrowed(val)),
             serde_json::Value::Array(arr) => {
                 let out: Vec<Value<'ctx>> = arr.iter().map(|v| v.into()).collect();
                 Value::Array(out)

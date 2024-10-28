@@ -16,9 +16,7 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     type Error = de::value::Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         match self {
             Value::Null => visitor.visit_unit(),
             Value::Bool(b) => visitor.visit_bool(*b),
@@ -40,121 +38,87 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_byte_buf(visitor)
     }
 
     fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         match self {
             Value::Null => visitor.visit_none(),
             _ => visitor.visit_some(self),
@@ -162,9 +126,7 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     }
 
     fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
@@ -180,16 +142,12 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     }
 
     fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
     fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_seq(visitor)
     }
 
@@ -206,9 +164,7 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     }
 
     fn deserialize_map<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_any(visitor)
     }
 
@@ -225,16 +181,12 @@ impl<'de> Deserializer<'de> for &'de Value<'_> {
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         self.deserialize_string(visitor)
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: Visitor<'de>,
-    {
+    where V: Visitor<'de> {
         visitor.visit_unit()
     }
 
@@ -277,9 +229,7 @@ impl<'de, 'a: 'de, 'ctx: 'de> SeqAccess<'de> for SeqDeserializer<'a, 'ctx> {
     type Error = de::value::Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-    where
-        T: de::DeserializeSeed<'de>,
-    {
+    where T: de::DeserializeSeed<'de> {
         self.iter
             .next()
             .map(|value| seed.deserialize(value))
@@ -306,9 +256,7 @@ impl<'de, 'a: 'de, 'ctx: 'de> MapAccess<'de> for MapDeserializer<'a, 'ctx> {
     type Error = de::value::Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
-    where
-        K: de::DeserializeSeed<'de>,
-    {
+    where K: de::DeserializeSeed<'de> {
         if let Some((key, value)) = self.iter.next() {
             self.value = Some(value);
             seed.deserialize(de::value::BorrowedStrDeserializer::new(key))
@@ -319,9 +267,7 @@ impl<'de, 'a: 'de, 'ctx: 'de> MapAccess<'de> for MapDeserializer<'a, 'ctx> {
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::DeserializeSeed<'de>,
-    {
+    where V: de::DeserializeSeed<'de> {
         match self.value.take() {
             Some(value) => seed.deserialize(value),
             None => Err(de::Error::custom("value is missing")),

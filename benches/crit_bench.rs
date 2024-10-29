@@ -3,8 +3,11 @@ use std::hint::black_box;
 use std::io::{BufRead, BufReader};
 
 use binggan::plugins::{BPUTrasher, CacheTrasher};
-use binggan::{BenchRunner, InputGroup};
+use binggan::{BenchRunner, PeakMemAlloc, INSTRUMENTED_SYSTEM};
 use serde_json_borrow::OwnedValue;
+
+#[global_allocator]
+pub static GLOBAL: &PeakMemAlloc<std::alloc::System> = &INSTRUMENTED_SYSTEM;
 
 fn lines_for_file(file: &str) -> impl Iterator<Item = String> {
     BufReader::new(File::open(file).unwrap())
@@ -15,46 +18,6 @@ fn lines_for_file(file: &str) -> impl Iterator<Item = String> {
 fn main() {
     access_bench();
     parse_bench();
-}
-
-fn bench_for_lines<F, I>(mut runner: InputGroup<(F, u64)>)
-where
-    F: Fn() -> I + 'static,
-    I: Iterator<Item = String>,
-{
-    runner
-        .add_plugin(CacheTrasher::default())
-        .add_plugin(BPUTrasher::default());
-    runner.set_name("parse");
-    runner.throughput(|data| data.1 as usize);
-    runner.register("serde_json", move |data| {
-        let mut val = None;
-        let iter = data.0();
-        for line in iter {
-            let json: serde_json::Value = serde_json::from_str(&line).unwrap();
-            val = Some(json);
-        }
-        black_box(val);
-    });
-    runner.register("serde_json_borrow", move |data| {
-        let mut val = None;
-        let iter = data.0();
-        for line in iter {
-            let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
-            val = Some(json);
-        }
-        black_box(val);
-    });
-    runner.register("SIMD_json_borrow", move |data| {
-        let iter = data.0();
-        for line in iter {
-            let mut data: Vec<u8> = line.into();
-            let v: simd_json::BorrowedValue = simd_json::to_borrowed_value(&mut data).unwrap();
-            black_box(v);
-        }
-    });
-
-    runner.run();
 }
 
 fn parse_bench() {
@@ -76,8 +39,89 @@ fn parse_bench() {
     add("wiki", "./benches/wiki.json");
     add("gh-archive", "./benches/gh.json");
 
-    bench_for_lines(InputGroup::new_with_inputs(named_data));
+    let mut runner: BenchRunner = BenchRunner::new();
+    runner
+        .add_plugin(CacheTrasher::default())
+        .add_plugin(BPUTrasher::default());
+    runner.set_name("parse");
+
+    for (name, (input_gen, size)) in named_data {
+        let mut runner = runner.new_group();
+        runner.set_input_size(size as usize);
+        runner.set_name(name);
+
+        let access = get_access_for_input_name(name);
+        runner.register("serde_json", move |_data| {
+            let mut val = None;
+            for line in input_gen() {
+                let json: serde_json::Value = serde_json::from_str(&line).unwrap();
+                val = Some(json);
+            }
+            black_box(val);
+        });
+        runner.register("serde_json_borrow", move |_data| {
+            let mut val = None;
+            for line in input_gen() {
+                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                val = Some(json);
+            }
+            black_box(val);
+        });
+
+        runner.register("serde_json + access by key", move |_data| {
+            let mut total_size = 0;
+            for line in input_gen() {
+                let json: serde_json::Value = serde_json::from_str(&line).unwrap();
+                total_size += access_json(&json, access);
+            }
+            black_box(total_size);
+        });
+        runner.register("serde_json_borrow", move |_data| {
+            let mut val = None;
+            for line in input_gen() {
+                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                val = Some(json);
+            }
+            black_box(val);
+        });
+
+        runner.register("serde_json_borrow + access by key", move |_data| {
+            let mut total_size = 0;
+            for line in input_gen() {
+                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                total_size += access_json_borrowed(&json, access);
+            }
+            black_box(total_size);
+        });
+
+        runner.register("SIMD_json_borrow", move |_data| {
+            for line in input_gen() {
+                let mut data: Vec<u8> = line.into();
+                let v: simd_json::BorrowedValue = simd_json::to_borrowed_value(&mut data).unwrap();
+                black_box(v);
+            }
+        });
+        runner.run();
+    }
 }
+
+fn get_access_for_input_name(name: &str) -> &[&[&'static str]] {
+    match name {
+        "hdfs" => &[&["severity_text", "timestamp", "body"]],
+        "simple_json" => &[&["last_name"]],
+        "gh-archive" => &[
+            &["id"],
+            &["type"],
+            &["actor", "avatar_url"],
+            &["actor", "avatar_url"],
+            &["actor", "id"],
+            &["actor", "login"],
+        ],
+        "wiki" => &[&["body", "url"]],
+        _ => &[],
+    }
+}
+
 fn access_bench() {
     let mut runner: BenchRunner = BenchRunner::new();
     runner
@@ -86,19 +130,12 @@ fn access_bench() {
     runner.set_name("access");
 
     let file_name_path_and_access = vec![
-        (
-            "simple_json",
-            "./benches/simple-parse-bench.json",
-            vec!["last_name"],
-        ),
-        (
-            "gh-archive",
-            "./benches/gh.json",
-            vec!["actor", "avatar_url"],
-        ),
+        ("simple_json", "./benches/simple-parse-bench.json"),
+        ("gh-archive", "./benches/gh.json"),
     ];
 
-    for (name, path, access) in &file_name_path_and_access {
+    for (name, path) in &file_name_path_and_access {
+        let access = get_access_for_input_name(name);
         let file_size = File::open(path).unwrap().metadata().unwrap().len();
         let serde_jsons: Vec<serde_json::Value> = lines_for_file(path)
             .map(|line| serde_json::from_str(&line).unwrap())
@@ -113,14 +150,8 @@ fn access_bench() {
         group.register_with_input("serde_json access", &serde_jsons, move |data| {
             let mut total_size = 0;
             for el in data.iter() {
-                // walk the access keys until the end. return 0 if value does no exist
-                let mut val = Some(el);
-                for key in access {
-                    val = val.and_then(|v| v.get(key));
-                }
-                if let Some(v) = val {
-                    total_size += v.as_str().map(|s| s.len()).unwrap_or(0);
-                }
+                // walk the access keys until the end. return 0 if value does not exist
+                total_size += access_json(el, access);
             }
             total_size
         });
@@ -130,18 +161,41 @@ fn access_bench() {
             move |data| {
                 let mut total_size = 0;
                 for el in data.iter() {
-                    // walk the access keys until the end. return 0 if value does no exist
-                    let mut val = el.get_value();
-                    for key in access {
-                        val = val.get(*key);
-                    }
-                    if let Some(v) = val.as_str() {
-                        total_size += v.len();
-                    }
+                    total_size += access_json_borrowed(el, access);
                 }
                 total_size
             },
         );
         group.run();
     }
+}
+
+fn access_json(el: &serde_json::Value, access: &[&[&str]]) -> usize {
+    let mut total_size = 0;
+    // walk the access keys until the end. return 0 if value does not exist
+    for access in access {
+        let mut val = Some(el);
+        for key in *access {
+            val = val.and_then(|v| v.get(key));
+        }
+        if let Some(v) = val {
+            total_size += v.as_str().map(|s| s.len()).unwrap_or(0);
+        }
+    }
+    total_size
+}
+
+fn access_json_borrowed(el: &OwnedValue, access: &[&[&str]]) -> usize {
+    let mut total_size = 0;
+    for access in access {
+        // walk the access keys until the end. return 0 if value does not exist
+        let mut val = el.get_value();
+        for key in *access {
+            val = val.get(*key);
+        }
+        if let Some(v) = val.as_str() {
+            total_size += v.len();
+        }
+    }
+    total_size
 }

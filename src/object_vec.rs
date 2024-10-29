@@ -27,7 +27,13 @@ pub struct ObjectAsVec<'ctx>(pub(crate) Vec<(KeyStrType<'ctx>, Value<'ctx>)>);
 
 impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
     fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
-        Self(vec.into_iter().map(|(k, v)| (k.into(), v)).collect())
+        Self::from_iter(vec)
+    }
+}
+
+impl<'ctx> FromIterator<(&'ctx str, Value<'ctx>)> for ObjectAsVec<'ctx> {
+    fn from_iter<T: IntoIterator<Item = (&'ctx str, Value<'ctx>)>>(iter: T) -> Self {
+        Self(iter.into_iter().map(|(k, v)| (k.into(), v)).collect())
     }
 }
 
@@ -207,6 +213,8 @@ impl<'ctx> From<&ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Valu
 mod tests {
     use std::borrow::Cow;
 
+    use crate::value::Number;
+
     use super::*;
 
     #[test]
@@ -214,6 +222,23 @@ mod tests {
         let obj: ObjectAsVec = ObjectAsVec(Vec::new());
         assert!(obj.is_empty());
         assert_eq!(obj.len(), 0);
+    }
+
+    #[test]
+    fn test_initialization_from_iter() {
+        let names = "abcde";
+        let iter = (0usize..)
+            .take(5)
+            .map(|i| (&names[i..i + 1], Value::Number(Number::from(i as u64))));
+
+        let obj = ObjectAsVec::from_iter(iter);
+
+        assert_eq!(obj.len(), 5);
+        assert_eq!(obj.get("a"), Some(&Value::Number(0u64.into())));
+        assert_eq!(obj.get("b"), Some(&Value::Number(1u64.into())));
+        assert_eq!(obj.get("c"), Some(&Value::Number(2u64.into())));
+        assert_eq!(obj.get("d"), Some(&Value::Number(3u64.into())));
+        assert_eq!(obj.get("e"), Some(&Value::Number(4u64.into())));
     }
 
     #[test]

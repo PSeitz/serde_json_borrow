@@ -59,14 +59,6 @@ fn parse_bench() {
             }
             black_box(val);
         });
-        runner.register("serde_json_borrow", move |_data| {
-            let mut val = None;
-            for line in input_gen() {
-                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
-                val = Some(json);
-            }
-            black_box(val);
-        });
 
         runner.register("serde_json + access by key", move |_data| {
             let mut total_size = 0;
@@ -113,9 +105,15 @@ fn get_access_for_input_name(name: &str) -> &[&[&'static str]] {
             &["id"],
             &["type"],
             &["actor", "avatar_url"],
-            &["actor", "avatar_url"],
+            &["actor", "url"],
             &["actor", "id"],
             &["actor", "login"],
+            &["actor", "url"],
+            &["actor", "avatar_url"],
+            &["type"],
+            &["actor", "id"],
+            &["publuc"],
+            &["created_at"],
         ],
         "wiki" => &[&["body", "url"]],
         _ => &[],

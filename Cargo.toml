@@ -29,5 +29,5 @@ cowkeys = []
 
 
 [[bench]]
-name = "crit_bench"
+name = "bench"
 harness = false

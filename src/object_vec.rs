@@ -25,9 +25,17 @@ pub type KeyStrType<'a> = &'a str;
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct ObjectAsVec<'ctx>(pub(crate) Vec<(KeyStrType<'ctx>, Value<'ctx>)>);
 
+#[cfg(feature = "cowkeys")]
 impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
     fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
         Self::from_iter(vec)
+    }
+}
+
+#[cfg(not(feature = "cowkeys"))]
+impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
+    fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
+        Self(vec)
     }
 }
 
@@ -222,6 +230,20 @@ mod tests {
         let obj: ObjectAsVec = ObjectAsVec(Vec::new());
         assert!(obj.is_empty());
         assert_eq!(obj.len(), 0);
+    }
+
+    #[test]
+    fn test_initialization_from_vec() {
+        let obj = ObjectAsVec::from(vec![
+            ("a", Value::Number(0u64.into())),
+            ("b", Value::Number(1u64.into())),
+            ("c", Value::Number(2u64.into())),
+        ]);
+
+        assert_eq!(obj.len(), 3);
+        assert_eq!(obj.get("a"), Some(&Value::Number(0u64.into())));
+        assert_eq!(obj.get("b"), Some(&Value::Number(1u64.into())));
+        assert_eq!(obj.get("c"), Some(&Value::Number(2u64.into())));
     }
 
     #[test]

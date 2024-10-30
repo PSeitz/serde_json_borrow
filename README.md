@@ -3,7 +3,7 @@
  
 # Serde JSON Borrow
 
-Up to 2x faster JSON parsing for [ndjson](http://ndjson.org/) type use cases.
+Up to 2x faster JSON parsing for NDJSON (Newline Delimited JSON format) type use cases.
 
 `serde_json_borrow` deserializes JSON from `&'ctx str` into `serde_json_borrow::Value<'ctx>` DOM, by trying to reference the original bytes, instead of copying them into `Strings`.
 

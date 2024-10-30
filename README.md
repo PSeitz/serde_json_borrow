@@ -8,7 +8,7 @@ Up to 2x faster JSON parsing for NDJSON (Newline Delimited JSON format) type use
 `serde_json_borrow` deserializes JSON from `&'ctx str` into `serde_json_borrow::Value<'ctx>` DOM, by trying to reference the original bytes, instead of copying them into `Strings`.
 
 In contrast the default [serde_json](https://github.com/serde-rs/json) parses into an owned `serde_json::Value`. Every `String` encountered is getting copied and 
-therefore allocated. That's great for ergnomonics, but not great for performance.
+therefore allocated. That's great for ergonomonics, but not great for performance.
 Especially in cases where the DOM representation is just an intermediate struct.
 
 To get a little bit more performance, `serde_json_borrow` pushes the (key,values) for JSON objects into a `Vec` instead of using a `BTreeMap`. Access works via

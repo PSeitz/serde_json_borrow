@@ -74,7 +74,6 @@ Instead of parsing a JSON object into a `Vec`, a `BTreeMap` could be enabled via
 `OwnedValue` is immutable by design.
 If you need to mutate the `Value` you can convert it to `serde_json::Value`.
 
-## Example
 Here is an example why mutability won't work:
 
 https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=bb0b919acc8930e71bdefdfc6a6d5240

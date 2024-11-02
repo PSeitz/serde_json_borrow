@@ -221,9 +221,8 @@ impl<'ctx> From<&ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Valu
 mod tests {
     use std::borrow::Cow;
 
-    use crate::value::Number;
-
     use super::*;
+    use crate::value::Number;
 
     #[test]
     fn test_empty_initialization() {

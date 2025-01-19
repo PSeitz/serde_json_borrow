@@ -78,6 +78,7 @@ mod object_vec;
 mod owned;
 mod ser;
 mod value;
+mod cowstr;
 
 pub use object_vec::{KeyStrType, ObjectAsVec, ObjectAsVec as Map};
 pub use owned::OwnedValue;

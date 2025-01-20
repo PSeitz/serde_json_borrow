@@ -3,11 +3,11 @@
 
 use std::borrow::Cow;
 
-use crate::{cowstr::CowStr, Value};
+use crate::Value;
 
 #[cfg(feature = "cowkeys")]
 /// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
-pub type KeyStrType<'a> = CowStr<'a>;
+pub type KeyStrType<'a> = crate::cowstr::CowStr<'a>;
 
 #[cfg(not(feature = "cowkeys"))]
 /// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag

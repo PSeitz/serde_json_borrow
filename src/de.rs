@@ -145,6 +145,7 @@ mod tests {
 
     use crate::Value;
 
+    #[cfg(feature = "cowkeys")]
     #[test]
     fn cowkeys() {
         let json_obj = r#"

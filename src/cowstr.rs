@@ -4,10 +4,10 @@ use serde::Deserialize;
 
 /// A wrapper around `Cow<str>` that implements `Deserialize` and can deserialize
 /// string keys into Cow::Borrowed when possible.
-/// 
+///
 /// This is because serde always deserializes strings into `Cow::Owned`.
 /// https://github.com/serde-rs/serde/issues/1852#issuecomment-559517427
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 pub struct CowStr<'a>(#[serde(borrow)] pub Cow<'a, str>);
 
 impl Deref for CowStr<'_> {

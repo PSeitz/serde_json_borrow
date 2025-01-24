@@ -79,6 +79,9 @@ mod owned;
 mod ser;
 mod value;
 
+#[cfg(feature = "cowkeys")]
+mod cowstr;
+
 pub use object_vec::{KeyStrType, ObjectAsVec, ObjectAsVec as Map};
 pub use owned::OwnedValue;
 pub use value::Value;

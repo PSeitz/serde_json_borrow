@@ -145,6 +145,23 @@ mod tests {
 
     use crate::Value;
 
+    #[cfg(feature = "cowkeys")]
+    #[test]
+    fn cowkeys() {
+        let json_obj = r#"
+            {
+                "bool": true,
+                "escaped\"": true
+            }
+       "#;
+
+        let val: Value = serde_json::from_str(json_obj).unwrap();
+
+        let obj = val.as_object().unwrap();
+        assert!(matches!(obj.as_vec()[0].0.clone().into(), Cow::Borrowed(_)));
+        assert!(matches!(obj.as_vec()[1].0.clone().into(), Cow::Owned(_)));
+    }
+
     #[test]
     fn deserialize_json_test() {
         let json_obj = r#"

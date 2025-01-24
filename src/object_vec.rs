@@ -7,7 +7,7 @@ use crate::Value;
 
 #[cfg(feature = "cowkeys")]
 /// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
-pub type KeyStrType<'a> = Cow<'a, str>;
+pub type KeyStrType<'a> = crate::cowstr::CowStr<'a>;
 
 #[cfg(not(feature = "cowkeys"))]
 /// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag

@@ -1,4 +1,5 @@
-use std::{borrow::Cow, ops::Deref};
+use std::borrow::Cow;
+use std::ops::Deref;
 
 use serde::Deserialize;
 

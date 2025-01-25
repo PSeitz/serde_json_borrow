@@ -1,7 +1,7 @@
 use serde::de::{self, IntoDeserializer, MapAccess, SeqAccess, Visitor};
 use serde::Deserializer;
 
-use crate::value::N;
+use crate::num::N;
 use crate::{KeyStrType, Value};
 
 impl<'de> IntoDeserializer<'de, de::value::Error> for &'de Value<'_> {
@@ -281,7 +281,7 @@ mod tests {
     use serde::de::{IgnoredAny, IntoDeserializer};
     use serde::Deserialize;
 
-    use crate::value::N;
+    use crate::num::N;
     use crate::Value;
 
     // Basic deserialization test for null value

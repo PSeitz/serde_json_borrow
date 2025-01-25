@@ -10,7 +10,6 @@ use super::Value;
 ///
 /// This trait is sealed and cannot be implemented for types outside of
 /// `serde_json_borrow`.
-
 /// # Examples
 ///
 /// ```
@@ -36,12 +35,12 @@ use super::Value;
 pub trait Index<'v> {
     /// Return None if the key is not already in the array or object.
     #[doc(hidden)]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&Value<'v>>;
+    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>>;
 }
 
 impl<'v> Index<'v> for usize {
     #[inline]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&Value<'v>> {
+    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>> {
         match v {
             Value::Array(vec) => vec.get(self),
             _ => None,
@@ -51,7 +50,7 @@ impl<'v> Index<'v> for usize {
 
 impl<'v, 'a: 'v> Index<'v> for &'a str {
     #[inline]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&Value<'v>> {
+    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>> {
         match v {
             Value::Object(map) => map.iter().find(|(k, _v)| k == &self).map(|(_k, v)| v),
             _ => None,

@@ -1,7 +1,8 @@
 use serde::ser::{Serialize, Serializer};
 
+use crate::num::{Number, N};
 use crate::owned::OwnedValue;
-use crate::value::{Number, Value, N};
+use crate::value::Value;
 use crate::Map;
 
 impl Serialize for Value<'_> {

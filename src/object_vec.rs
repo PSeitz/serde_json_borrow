@@ -222,7 +222,7 @@ mod tests {
     use std::borrow::Cow;
 
     use super::*;
-    use crate::value::Number;
+    use crate::num::Number;
 
     #[test]
     fn test_empty_initialization() {

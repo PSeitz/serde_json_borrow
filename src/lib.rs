@@ -74,6 +74,7 @@
 mod de;
 mod deserializer;
 mod index;
+mod num;
 mod object_vec;
 mod owned;
 mod ser;

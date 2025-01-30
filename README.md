@@ -18,6 +18,8 @@ an iterator, which has the same API when iterating the `BTreeMap`.
 You can take advantage of `OwnedValue` to parse a `String` containing unparsed `JSON` into a `Value` without having to worry about lifetimes,
 as `OwnedValue` will take ownership of the `String` and reference slices of it, rather than making copies.
 
+Note: `OwnedValue` does not implement `Deserialize`.
+
 # Limitations
 The feature flag `cowkeys` uses `Cow<str>` instead of `&str` as keys in objects. This enables support for escaped data in keys.
 Without the `cowkeys` feature flag `&str` is used, which does not allow any JSON escaping characters in keys.

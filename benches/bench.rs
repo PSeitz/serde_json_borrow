@@ -16,8 +16,8 @@ fn lines_for_file(file: &str) -> impl Iterator<Item = String> {
 }
 
 fn main() {
-    access_bench();
     parse_bench();
+    access_bench();
 }
 
 fn parse_bench() {
@@ -68,7 +68,7 @@ fn parse_bench() {
             }
             black_box(total_size);
         });
-        runner.register("serde_json_borrow", move |_data| {
+        runner.register("serde_json_borrow::OwnedValue", move |_data| {
             let mut val = None;
             for line in input_gen() {
                 let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
@@ -77,14 +77,17 @@ fn parse_bench() {
             black_box(val);
         });
 
-        runner.register("serde_json_borrow + access by key", move |_data| {
-            let mut total_size = 0;
-            for line in input_gen() {
-                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
-                total_size += access_json_borrowed(&json, access);
-            }
-            black_box(total_size);
-        });
+        runner.register(
+            "serde_json_borrow::OwnedValue + access by key",
+            move |_data| {
+                let mut total_size = 0;
+                for line in input_gen() {
+                    let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                    total_size += access_json_borrowed(&json, access);
+                }
+                black_box(total_size);
+            },
+        );
 
         runner.register("SIMD_json_borrow", move |_data| {
             for line in input_gen() {

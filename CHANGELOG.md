@@ -1,3 +1,7 @@
+0.8.0 (2025-06-15)
+==================
+perf: add CowStr type to be able to use Cow::Borrowed on keys https://github.com/PSeitz/serde_json_borrow/pull/32 (Thanks @jszwec)
+
 0.7.1 (2024-11-02)
 ==================
 strip extra iteration when initialising ObjectAsVec https://github.com/PSeitz/serde_json_borrow/pull/29 (Thanks @meskill) 

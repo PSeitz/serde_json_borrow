@@ -45,27 +45,54 @@ List of _unsupported_ characters (https://www.json.org/json-en.html) in keys wit
 * hdfs -> log
 * wiki -> few keys with large text body 
 * gh-archive -> highly nested object
+
+Access benchmarks are done to show the relative overhead of accessing data on the resulting `Value` DOM, which
+is insignificant compared to the parsing time here.
+Since `serde_json_borrow` deserializes into a `Vec` instead of a `BTreeMap`.
+
+In the benchmarks below it consistently outperforms `serde_json` and `simd-json`.
+Benchmarks are done on a AMD Ryzen 7 9800X3D on 6.14.6-2-MANJARO.
+
+
 ```
+parse
 simple_json
-serde_json               Avg: 139.29 MiB/s    Median: 139.53 MiB/s    [134.51 MiB/s .. 140.45 MiB/s]    
-serde_json_borrow        Avg: 210.33 MiB/s    Median: 209.66 MiB/s    [204.08 MiB/s .. 214.28 MiB/s]    
-SIMD_json_borrow         Avg: 140.36 MiB/s    Median: 140.44 MiB/s    [138.96 MiB/s .. 141.75 MiB/s]    
+serde_json                                           Avg: 297.30 MB/s     Median: 296.71 MB/s     [293.91 MB/s .. 312.10 MB/s]    
+serde_json + access by key                           Avg: 297.43 MB/s     Median: 296.54 MB/s     [285.99 MB/s .. 306.42 MB/s]    
+serde_json_borrow::OwnedValue                        Avg: 552.02 MB/s     Median: 552.80 MB/s     [538.45 MB/s .. 555.48 MB/s]    
+serde_json_borrow::OwnedValue + access by key        Avg: 535.23 MB/s     Median: 535.60 MB/s     [524.21 MB/s .. 537.36 MB/s]    
+SIMD_json_borrow                                     Avg: 296.12 MB/s     Median: 296.68 MB/s     [289.54 MB/s .. 297.27 MB/s]    
 hdfs
-serde_json               Avg: 284.64 MiB/s    Median: 284.60 MiB/s    [280.98 MiB/s .. 286.46 MiB/s]    
-serde_json_borrow        Avg: 372.99 MiB/s    Median: 371.75 MiB/s    [365.97 MiB/s .. 379.96 MiB/s]    
-SIMD_json_borrow         Avg: 294.41 MiB/s    Median: 294.96 MiB/s    [287.76 MiB/s .. 296.96 MiB/s]    
+serde_json                                           Avg: 688.77 MB/s     Median: 690.78 MB/s     [660.10 MB/s .. 698.89 MB/s]    
+serde_json + access by key                           Avg: 675.24 MB/s     Median: 675.85 MB/s     [661.28 MB/s .. 683.70 MB/s]    
+serde_json_borrow::OwnedValue                        Avg: 1.1158 GB/s     Median: 1.1175 GB/s     [1.0847 GB/s .. 1.1301 GB/s]    
+serde_json_borrow::OwnedValue + access by key        Avg: 1.1044 GB/s     Median: 1.1085 GB/s     [1.0040 GB/s .. 1.1262 GB/s]    
+SIMD_json_borrow                                     Avg: 687.72 MB/s     Median: 688.76 MB/s     [663.14 MB/s .. 700.18 MB/s]    
 hdfs_with_array
-serde_json               Avg: 194.50 MiB/s    Median: 200.41 MiB/s    [155.44 MiB/s .. 211.49 MiB/s]    
-serde_json_borrow        Avg: 275.01 MiB/s    Median: 282.74 MiB/s    [208.35 MiB/s .. 289.78 MiB/s]    
-SIMD_json_borrow         Avg: 206.34 MiB/s    Median: 210.52 MiB/s    [180.99 MiB/s .. 220.30 MiB/s]    
+serde_json                                           Avg: 468.18 MB/s     Median: 466.53 MB/s     [455.06 MB/s .. 486.57 MB/s]    
+serde_json + access by key                           Avg: 478.47 MB/s     Median: 478.35 MB/s     [467.25 MB/s .. 494.33 MB/s]    
+serde_json_borrow::OwnedValue                        Avg: 813.81 MB/s     Median: 816.95 MB/s     [770.63 MB/s .. 825.62 MB/s]    
+serde_json_borrow::OwnedValue + access by key        Avg: 821.20 MB/s     Median: 824.86 MB/s     [788.96 MB/s .. 833.78 MB/s]    
+SIMD_json_borrow                                     Avg: 536.68 MB/s     Median: 538.81 MB/s     [517.16 MB/s .. 545.30 MB/s]    
 wiki
-serde_json               Avg: 439.95 MiB/s    Median: 441.28 MiB/s    [429.97 MiB/s .. 444.82 MiB/s]    
-serde_json_borrow        Avg: 484.74 MiB/s    Median: 485.29 MiB/s    [471.38 MiB/s .. 489.16 MiB/s]    
-SIMD_json_borrow         Avg: 576.57 MiB/s    Median: 578.11 MiB/s    [554.03 MiB/s .. 586.18 MiB/s]    
+serde_json                                           Avg: 1.3004 GB/s     Median: 1.3014 GB/s     [1.2670 GB/s .. 1.3182 GB/s]    
+serde_json + access by key                           Avg: 1.3521 GB/s     Median: 1.3531 GB/s     [1.3180 GB/s .. 1.3678 GB/s]    
+serde_json_borrow::OwnedValue                        Avg: 1.5089 GB/s     Median: 1.5072 GB/s     [1.4898 GB/s .. 1.5289 GB/s]    
+serde_json_borrow::OwnedValue + access by key        Avg: 1.5656 GB/s     Median: 1.5638 GB/s     [1.5393 GB/s .. 1.5945 GB/s]    
+SIMD_json_borrow                                     Avg: 1.4824 GB/s     Median: 1.4838 GB/s     [1.4146 GB/s .. 1.5250 GB/s]    
 gh-archive
-serde_json               Avg: 176.21 MiB/s    Median: 176.37 MiB/s    [172.52 MiB/s .. 177.78 MiB/s]    
-serde_json_borrow        Avg: 363.58 MiB/s    Median: 364.02 MiB/s    [355.28 MiB/s .. 374.10 MiB/s]    
-SIMD_json_borrow         Avg: 383.66 MiB/s    Median: 386.94 MiB/s    [363.80 MiB/s .. 400.25 MiB/s]    
+serde_json                                           Avg: 451.29 MB/s     Median: 451.74 MB/s     [439.02 MB/s .. 455.40 MB/s]    
+serde_json + access by key                           Avg: 453.74 MB/s     Median: 454.52 MB/s     [444.96 MB/s .. 457.46 MB/s]    
+serde_json_borrow::OwnedValue                        Avg: 1.1181 GB/s     Median: 1.1236 GB/s     [1.0584 GB/s .. 1.1467 GB/s]    
+serde_json_borrow::OwnedValue + access by key        Avg: 1.1361 GB/s     Median: 1.1416 GB/s     [1.0744 GB/s .. 1.1611 GB/s]    
+SIMD_json_borrow                                     Avg: 992.99 MB/s     Median: 995.00 MB/s     [956.99 MB/s .. 1.0086 GB/s]    
+access
+simple_json
+serde_json access               Avg: 8.9616 GB/s     Median: 8.9910 GB/s     [8.5910 GB/s .. 9.0113 GB/s]    Output: 7_002    
+serde_json_borrow access        Avg: 30.654 GB/s     Median: 30.859 GB/s     [29.639 GB/s .. 31.056 GB/s]    Output: 7_002    
+gh-archive
+serde_json access               Avg: 15.686 GB/s     Median: 15.729 GB/s     [15.137 GB/s .. 15.843 GB/s]    Output: 231_243    
+serde_json_borrow access        Avg: 35.535 GB/s     Median: 35.575 GB/s     [34.149 GB/s .. 37.598 GB/s]    Output: 231_243    
 
 ```
 

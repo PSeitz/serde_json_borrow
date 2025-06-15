@@ -3,10 +3,26 @@ use std::ops::Deref;
 
 use crate::Value;
 
-/// Parses a `String` into `Value`, by taking ownership of `String` and reference slices from it in
-/// contrast to copying the contents.
+/// Parses a `String` into `Value`, by taking ownership of `String` and reference slices from it.
 ///
-/// This is done to mitigate lifetime issues.
+/// With [`crate::Value`], your lifetime is tied to the lifetime of the
+/// passed `str`. This means that the `Value` can only be used as long as the original `str` is
+/// valid. With [`OwnedValue`], you get a owned Value instead.
+///
+/// Note: `OwnedValue` does not implement `Deserialize`, as it is not intended to be used for
+/// deserialization. It is designed to be used when you already have a `String` containing JSON
+/// data, and you want to parse it into a `Value` without worrying about lifetimes.
+///
+/// ## Example
+/// ```
+/// use serde_json_borrow::OwnedValue;
+/// use serde_json_borrow::Value;
+/// let raw_json = r#"{"name": "John", "age": 30}"#;
+/// let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
+/// assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
+/// assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+/// ```
+///
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct OwnedValue {
     /// Keep owned data, to be able to safely reference it from Value<'static>

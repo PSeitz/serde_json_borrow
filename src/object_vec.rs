@@ -6,11 +6,11 @@ use std::borrow::Cow;
 use crate::Value;
 
 #[cfg(feature = "cowkeys")]
-/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+/// The string type used. Can be toggled between `&str` and `Cow<str>` via `cowstr` feature flag
 pub type KeyStrType<'a> = crate::cowstr::CowStr<'a>;
 
 #[cfg(not(feature = "cowkeys"))]
-/// The string type used. Can be toggled between &str and Cow<str> via `cowstr` feature flag
+/// The string type used. Can be toggled between `&str` and `Cow<str>` via `cowstr` feature flag
 /// Cow strings
 pub type KeyStrType<'a> = &'a str;
 
@@ -51,7 +51,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// # Note
     /// Since KeyStrType can be changed via a feature flag avoid using `as_vec` and use other
     /// methods instead. This could be a problem with feature unification, when one crate uses it
-    /// as &str and another uses it as Cow<str>, both will get Cow<str?
+    /// as `&str` and another uses it as `Cow<str>`, both will get `Cow<str>`
     #[inline]
     pub fn as_vec(&self) -> &Vec<(KeyStrType, Value<'ctx>)> {
         &self.0

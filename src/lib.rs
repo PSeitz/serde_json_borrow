@@ -25,6 +25,23 @@
 //! due to less allocations. By borrowing a DOM, the library ensures that no additional memory is
 //! allocated for `Strings`, that contain no JSON escape codes.
 //!
+//! # Usage
+//! ```rust
+//! use std::io;
+//! fn main() -> io::Result<()> {
+//!     let data: &str = r#"{"bool": true, "key": "123"}"#;
+//!     // Note that serde_json_borrow::Value<'ctx> is tied to the lifetime of data.
+//!     let value: serde_json_borrow::Value = serde_json::from_str(&data)?;
+//!     assert_eq!(value.get("bool"), &serde_json_borrow::Value::Bool(true));
+//!     assert_eq!(value.get("key"), &serde_json_borrow::Value::Str("123".into()));
+//!     // Using OwnedValue will take ownership of the String.
+//!     let value: serde_json_borrow::OwnedValue = serde_json_borrow::OwnedValue::from_str(&data)?;
+//!     assert_eq!(value.get("bool"), &serde_json_borrow::Value::Bool(true));
+//!     assert_eq!(value.get("key"), &serde_json_borrow::Value::Str("123".into()));
+//!     Ok(())
+//! }
+//! ```
+//!
 //! ## OwnedValue
 //! You can take advantage of [`OwnedValue`] to parse a `String` containing
 //! unparsed `JSON` into a `Value` without having to worry about lifetimes,
@@ -36,7 +53,7 @@
 //! support for escaped data in keys. Without the `cowkeys` feature flag `&str` is used, which does
 //! not allow any JSON escaping characters in keys.
 //!
-//! List of _unsupported_ characters (https://www.json.org/json-en.html) in object keys without `cowkeys` feature flag.
+//! List of _unsupported_ characters (<https://www.json.org/json-en.html>) in object keys without `cowkeys` feature flag.
 //!
 //! ```text
 //! \" represents the quotation mark character (U+0022).
@@ -47,18 +64,6 @@
 //! \n represents the line feed character (U+000A).
 //! \r represents the carriage return character (U+000D).
 //! \t represents the character tabulation character (U+0009).
-//! ```
-//! # Usage
-//! ```rust
-//! use std::io;
-//! use serde_json_borrow::Value;
-//! fn main() -> io::Result<()> {
-//!     let data = r#"{"bool": true, "key": "123"}"#;
-//!     let value: Value = serde_json::from_str(&data)?;
-//!     assert_eq!(value.get("bool"), &Value::Bool(true));
-//!     assert_eq!(value.get("key"), &Value::Str("123".into()));
-//!     Ok(())
-//! }
 //! ```
 //! # Performance
 //! Performance gain depends on how many allocations can be avoided, and how many objects there are,
@@ -76,7 +81,7 @@ mod deserializer;
 mod index;
 mod num;
 mod object_vec;
-mod owned;
+mod ownedvalue;
 mod ser;
 mod value;
 
@@ -84,5 +89,5 @@ mod value;
 mod cowstr;
 
 pub use object_vec::{KeyStrType, ObjectAsVec, ObjectAsVec as Map};
-pub use owned::OwnedValue;
+pub use ownedvalue::OwnedValue;
 pub use value::Value;

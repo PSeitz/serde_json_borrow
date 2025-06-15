@@ -4,7 +4,6 @@ use std::io::{BufRead, BufReader};
 
 use binggan::plugins::{BPUTrasher, CacheTrasher};
 use binggan::{BenchRunner, PeakMemAlloc, INSTRUMENTED_SYSTEM};
-use serde_json_borrow::OwnedValue;
 
 #[global_allocator]
 pub static GLOBAL: &PeakMemAlloc<std::alloc::System> = &INSTRUMENTED_SYSTEM;
@@ -51,6 +50,7 @@ fn parse_bench() {
         runner.set_name(name);
 
         let access = get_access_for_input_name(name);
+        // Existing serde_json benchmark:
         runner.register("serde_json", move |_data| {
             let mut val = None;
             for line in input_gen() {
@@ -60,6 +60,7 @@ fn parse_bench() {
             black_box(val);
         });
 
+        // Existing serde_json + access by key:
         runner.register("serde_json + access by key", move |_data| {
             let mut total_size = 0;
             for line in input_gen() {
@@ -68,26 +69,43 @@ fn parse_bench() {
             }
             black_box(total_size);
         });
+
+        // Existing current-version OwnedValue parse:
         runner.register("serde_json_borrow::OwnedValue", move |_data| {
             let mut val = None;
             for line in input_gen() {
-                let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                let json: serde_json_borrow::OwnedValue =
+                    serde_json_borrow::OwnedValue::parse_from(line).unwrap();
                 val = Some(json);
             }
             black_box(val);
         });
 
+        // Existing current-version parse + access:
         runner.register(
             "serde_json_borrow::OwnedValue + access by key",
             move |_data| {
                 let mut total_size = 0;
                 for line in input_gen() {
-                    let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
+                    let json: serde_json_borrow::OwnedValue =
+                        serde_json_borrow::OwnedValue::parse_from(line).unwrap();
                     total_size += access_json_borrowed(&json, access);
                 }
                 black_box(total_size);
             },
         );
+
+        // === New: parse benchmark for version 0.7 alias ===
+        runner.register("serde_json_borrow v0.7::OwnedValue", move |_data| {
+            let mut val = None;
+            for line in input_gen() {
+                // Use the aliased crate for v0.7
+                let json: serde_json_borrow_07::OwnedValue =
+                    serde_json_borrow_07::OwnedValue::parse_from(line).unwrap();
+                val = Some(json);
+            }
+            black_box(val);
+        });
 
         runner.register("SIMD_json_borrow", move |_data| {
             for line in input_gen() {
@@ -96,10 +114,22 @@ fn parse_bench() {
                 black_box(v);
             }
         });
+
+        // runner.register("serde_json_borrow v0.7::OwnedValue + access by key", move |_data| {
+        //     let mut total_size = 0;
+        //     for line in input_gen() {
+        //         let json: serde_json_borrow_v07::OwnedValue =
+        //             serde_json_borrow_v07::OwnedValue::parse_from(line).unwrap();
+        //         total_size += access_json_borrowed(&json, access);
+        //     }
+        //     black_box(total_size);
+        // });
+
         runner.run();
     }
 }
 
+// Keep access_bench() exactly as before:
 fn get_access_for_input_name(name: &str) -> &[&[&'static str]] {
     match name {
         "hdfs" => &[&["severity_text", "timestamp", "body"]],
@@ -115,7 +145,7 @@ fn get_access_for_input_name(name: &str) -> &[&[&'static str]] {
             &["actor", "avatar_url"],
             &["type"],
             &["actor", "id"],
-            &["publuc"],
+            &["public"],
             &["created_at"],
         ],
         "wiki" => &[&["body", "url"]],
@@ -141,8 +171,8 @@ fn access_bench() {
         let serde_jsons: Vec<serde_json::Value> = lines_for_file(path)
             .map(|line| serde_json::from_str(&line).unwrap())
             .collect();
-        let serde_json_borrows: Vec<OwnedValue> = lines_for_file(path)
-            .map(|line| OwnedValue::parse_from(line).unwrap())
+        let serde_json_borrows: Vec<serde_json_borrow::OwnedValue> = lines_for_file(path)
+            .map(|line| serde_json_borrow::OwnedValue::parse_from(line).unwrap())
             .collect();
 
         let mut group = runner.new_group();
@@ -151,8 +181,9 @@ fn access_bench() {
         group.register_with_input("serde_json access", &serde_jsons, move |data| {
             let mut total_size = 0;
             for el in data.iter() {
-                // walk the access keys until the end. return 0 if value does not exist
-                total_size += access_json(el, access);
+                for _ in 0..10 {
+                    total_size += access_json(el, access);
+                }
             }
             total_size
         });
@@ -162,7 +193,9 @@ fn access_bench() {
             move |data| {
                 let mut total_size = 0;
                 for el in data.iter() {
-                    total_size += access_json_borrowed(el, access);
+                    for _ in 0..10 {
+                        total_size += access_json_borrowed(el, access);
+                    }
                 }
                 total_size
             },
@@ -171,9 +204,9 @@ fn access_bench() {
     }
 }
 
+// ... rest of helpers unchanged ...
 fn access_json(el: &serde_json::Value, access: &[&[&str]]) -> usize {
     let mut total_size = 0;
-    // walk the access keys until the end. return 0 if value does not exist
     for access in access {
         let mut val = Some(el);
         for key in *access {
@@ -186,10 +219,9 @@ fn access_json(el: &serde_json::Value, access: &[&[&str]]) -> usize {
     total_size
 }
 
-fn access_json_borrowed(el: &OwnedValue, access: &[&[&str]]) -> usize {
+fn access_json_borrowed(el: &serde_json_borrow::OwnedValue, access: &[&[&str]]) -> usize {
     let mut total_size = 0;
     for access in access {
-        // walk the access keys until the end. return 0 if value does not exist
         let mut val = el.get_value();
         for key in *access {
             val = val.get(*key);

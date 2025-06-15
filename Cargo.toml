@@ -20,6 +20,7 @@ serde_json = "1.0.86"
 [dev-dependencies]
 binggan = "0.14.0"
 simd-json = "0.13.10"
+serde_json_borrow_07 = { package = "serde_json_borrow", version = "0.7.0" }
 
 [features]
 default = ["cowkeys"]

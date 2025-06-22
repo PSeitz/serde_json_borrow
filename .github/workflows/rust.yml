@@ -24,3 +24,5 @@ jobs:
       run: cargo test --verbose --no-default-features
     - name: Run tests default
       run: cargo test --verbose
+    - name: Run compile-fail tests
+      run: python3 compile_fail_tests/verify_soundness_failures.py

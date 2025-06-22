@@ -1,0 +1,33 @@
+[package]
+name = "compile_fail_tests"
+version = "0.0.0"
+edition = "2024"
+
+[workspace]
+
+[dependencies]
+serde_json_borrow = { version = "0.8.0", path = ".." }
+
+[[bin]]
+name = "deserialize_borrow_conflict"
+path = "deserialize_borrow_conflict.rs"
+
+[[bin]]
+name = "guard_thread_safety"
+path = "guard_thread_safety.rs"
+
+[[bin]]
+name = "map_lifetime_soundness"
+path = "map_lifetime_soundness.rs"
+
+[[bin]]
+name = "guard_outlives_string_scope"
+path = "guard_outlives_string_scope.rs"
+
+[[bin]]
+name = "guard_return_from_function"
+path = "guard_return_from_function.rs"
+
+[[bin]]
+name = "leak_references_from_guard"
+path = "leak_references_from_guard.rs"

@@ -200,6 +200,12 @@ impl<'ctx> ObjectAsVec<'ctx> {
         let idx = self.0.len() - 1;
         &mut self.0[idx].1
     }
+
+    /// Clear the underlying vec
+    #[inline]
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
 }
 
 impl<'ctx> From<ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Value> {

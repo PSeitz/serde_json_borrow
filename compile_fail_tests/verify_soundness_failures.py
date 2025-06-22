@@ -115,12 +115,16 @@ def run_cargo_check(bin_name: str) -> tuple[bool, str]:
     Run cargo check for a specific binary target.
     Returns (compilation_succeeded, stderr)
     """
+    env = os.environ.copy()
+    # the simple pattern recognition fails with interpolated ANSI colors
+    env["CARGO_TERM_COLOR"] = "never"
     try:
         process = subprocess.run(
             ["cargo", "check", "--bin", bin_name],
             capture_output=True,
             text=True,
             check=False,
+            env=env,
         )
         return process.returncode == 0, process.stderr
     except subprocess.SubprocessError as e:

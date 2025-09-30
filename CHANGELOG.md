@@ -1,3 +1,9 @@
+0.9.0 (2025-09-30)
+==================
+reexport `Number`
+Add a fmt::Display impl for Number https://github.com/PSeitz/serde_json_borrow/pull/39 (Thanks @quodlibetor)
+feat: Add get_key_value_at method for O(1) lookup in ObjectAsVec https://github.com/PSeitz/serde_json_borrow/pull/40  (Thanks @quodlibetor)
+
 0.8.0 (2025-06-15)
 ==================
 perf: add CowStr type to be able to use Cow::Borrowed on keys https://github.com/PSeitz/serde_json_borrow/pull/32 (Thanks @jszwec)

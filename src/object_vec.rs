@@ -103,6 +103,66 @@ impl<'ctx> ObjectAsVec<'ctx> {
         })
     }
 
+    /// Finds an [`ObjectEntry`] in the Map by key.
+    ///
+    /// This method allows you to obtain both the value and its position in the underlying Vec.
+    ///
+    /// Similar to [`ObjectAsVec::get_key_value`], but returns an [`ObjectEntry`] instead of
+    /// a tuple.
+    ///
+    /// ## Performance
+    ///
+    /// As this is backed by a Vec, this searches linearly through the Vec as may be much more
+    /// expensive than a `Hashmap` for larger Objects.
+    ///
+    /// The returned `index` can be used with [`ObjectAsVec::get_key_value_at`] for future
+    /// O(1) access.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use serde_json_borrow::{ObjectAsVec, Value};
+    /// # let obj = ObjectAsVec::from(vec![("name", Value::Str("John".into()))]);
+    /// let entry = obj.get_entry("name").unwrap();
+    /// println!("Found '{}={}' at index {}", entry.key, entry.value, entry.index);
+    /// ```
+    #[inline]
+    pub fn get_entry(&self, key: &str) -> Option<ObjectEntry<'_, 'ctx>> {
+        self.0.iter().enumerate().find_map(|(index, (k, v))| {
+            if *k == key {
+                Some(ObjectEntry {
+                    index,
+                    key: k.as_ref(),
+                    value: v,
+                })
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Retrieves an entry directly by its index in the underlying Vec.
+    ///
+    /// This method provides O(1) access to entries when the index is known,
+    /// avoiding the linear search required by [`ObjectAsVec::get_key_value`] if you have
+    /// already looked up the entry using [`ObjectAsVec::get_entry`] or otherwise have
+    /// found its index.
+    ///
+    /// ## Examples
+    ///
+    /// ```
+    /// # use serde_json_borrow::{ObjectAsVec, Value};
+    /// # let obj = ObjectAsVec::from(vec![("name", Value::Str("John".into()))]);
+    /// let entry = obj.get_entry("name").unwrap();
+    /// if let Some((key, value)) = obj.get_key_value_at(entry.index) {
+    ///     println!("Found entry: {} = {:?}", key, value);
+    /// }
+    /// ```
+    #[inline]
+    pub fn get_key_value_at(&self, index: usize) -> Option<(&str, &Value<'ctx>)> {
+        self.0.get(index).map(|(k, v)| (k.as_ref(), v))
+    }
+
     /// An iterator visiting all key-value pairs
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value<'ctx>)> {
@@ -200,6 +260,21 @@ impl<'ctx> ObjectAsVec<'ctx> {
         let idx = self.0.len() - 1;
         &mut self.0[idx].1
     }
+}
+
+/// An entry in a JSON object with its position in the underlying Vec, key, and value.
+///
+/// This struct is returned by the [`ObjectAsVec::get_entry`] method.
+///
+/// The index can be used with [`ObjectAsVec::get_key_value_at`] for direct access to entries
+/// without searching by key.
+pub struct ObjectEntry<'a, 'ctx> {
+    /// The position in the underlying Vec
+    pub index: usize,
+    /// The key string
+    pub key: &'a str,
+    /// The Value reference
+    pub value: &'a Value<'ctx>,
 }
 
 impl<'ctx> From<ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Value> {
@@ -389,5 +464,59 @@ mod tests {
                 Value::Null
             ]))
         );
+    }
+
+    #[test]
+    fn test_get_entry() {
+        let obj = ObjectAsVec::from(vec![
+            ("key1", Value::Number(42u64.into())),
+            ("key2", Value::Bool(true)),
+            ("key3", Value::Str(Cow::Borrowed("value"))),
+        ]);
+
+        let entry = obj.get_entry("key2").unwrap();
+        assert_eq!(entry.index, 1);
+        assert_eq!(entry.key, "key2");
+        assert_eq!(entry.value, &Value::Bool(true));
+
+        // non-existing key
+        assert!(obj.get_entry("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_get_key_value_at() {
+        let obj = ObjectAsVec::from(vec![
+            ("key1", Value::Number(42u64.into())),
+            ("key2", Value::Bool(true)),
+            ("key3", Value::Str(Cow::Borrowed("value"))),
+        ]);
+
+        // Test valid index
+        let (key, value) = obj.get_key_value_at(2).unwrap();
+        assert_eq!(key, "key3");
+        assert_eq!(value, &Value::Str(Cow::Borrowed("value")));
+
+        // invalid index should be none
+        assert!(obj.get_key_value_at(3).is_none());
+    }
+
+    #[test]
+    fn test_entry_index_usage_with_enumerate_find() {
+        let obj = ObjectAsVec::from(vec![
+            ("name", Value::Str(Cow::Borrowed("John"))),
+            ("age", Value::Number(30u64.into())),
+            ("city", Value::Str(Cow::Borrowed("New York"))),
+        ]);
+
+        let idx = obj
+            .iter()
+            .enumerate()
+            .find(|(_, (key, _))| *key == "city")
+            .map(|(idx, _)| idx)
+            .unwrap();
+
+        // ensure that the found object matches the searched for object
+        let (key, value) = obj.get_key_value_at(idx).unwrap();
+        assert_eq!(key, "city");
     }
 }

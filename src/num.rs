@@ -108,6 +108,17 @@ impl Hash for N {
         }
     }
 }
+
+impl std::fmt::Display for Number {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.n {
+            N::PosInt(n) => write!(f, "{}", n),
+            N::NegInt(n) => write!(f, "{}", n),
+            N::Float(n) => write!(f, "{}", n),
+        }
+    }
+}
+
 impl From<u64> for Number {
     fn from(val: u64) -> Self {
         Self { n: N::PosInt(val) }
@@ -133,5 +144,17 @@ impl From<Number> for serde_json::value::Number {
             N::NegInt(n) => n.into(),
             N::Float(n) => serde_json::value::Number::from_f64(n).unwrap(),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_number_display() {
+        assert_eq!(Number::from(42u64).to_string(), "42");
+        assert_eq!(Number::from(-42i64).to_string(), "-42");
+        assert_eq!(Number::from(3.66).to_string(), "3.66");
     }
 }

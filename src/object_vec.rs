@@ -260,6 +260,12 @@ impl<'ctx> ObjectAsVec<'ctx> {
         let idx = self.0.len() - 1;
         &mut self.0[idx].1
     }
+
+    /// Clear the underlying vec
+    #[inline]
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
 }
 
 /// An entry in a JSON object with its position in the underlying Vec, key, and value.

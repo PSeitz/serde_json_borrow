@@ -53,7 +53,7 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// methods instead. This could be a problem with feature unification, when one crate uses it
     /// as `&str` and another uses it as `Cow<str>`, both will get `Cow<str>`
     #[inline]
-    pub fn as_vec(&self) -> &Vec<(KeyStrType, Value<'ctx>)> {
+    pub fn as_vec(&self) -> &Vec<(KeyStrType<'ctx>, Value<'ctx>)> {
         &self.0
     }
 

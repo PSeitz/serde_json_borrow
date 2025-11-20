@@ -68,7 +68,7 @@ impl OwnedValue {
     }
 
     /// Returns a reference to the internal JSON string.
-    pub fn as_str(&self) -> &str {
+    pub fn owned_as_str(&self) -> &str {
         &self.data
     }
 
@@ -118,16 +118,22 @@ mod tests {
     /// Test that as_str returns the internal JSON string
     #[test]
     fn test_as_str_access() {
-        let raw_json = r#"{"name": "John", "age": 30}"#;
+        let raw_json = r#"{
+            "name": "John",
+            "age": 30
+        }"#;
         let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
 
-        assert_eq!(owned_value.as_str(), raw_json);
+        assert_eq!(owned_value.owned_as_str(), raw_json);
     }
 
     /// Test that into_string returns the internal JSON string and consumes self
     #[test]
     fn test_into_string() {
-        let raw_json = r#"{"name": "John", "age": 30}"#;
+        let raw_json = r#"{
+            "name": "John",
+            "age": 30
+        }"#;
         let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
 
         let as_string = owned_value.into_string();

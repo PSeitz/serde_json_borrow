@@ -26,7 +26,7 @@ use crate::Value;
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct OwnedValue {
     /// Keep owned data, to be able to safely reference it from Value<'static>
-    _data: String,
+    data: String,
     value: Value<'static>,
 }
 
@@ -52,7 +52,7 @@ impl OwnedValue {
         let value: Value = serde_json::from_str(&json_str)?;
         let value = unsafe { extend_lifetime(value) };
         Ok(Self {
-            _data: json_str,
+            data: json_str,
             value,
         })
     }
@@ -65,6 +65,16 @@ impl OwnedValue {
     /// Returns the `Value` reference.
     pub fn get_value(&self) -> &Value<'_> {
         &self.value
+    }
+
+    /// Returns a reference to the internal JSON string.
+    pub fn owned_as_str(&self) -> &str {
+        &self.data
+    }
+
+    /// Consumes self and returns the internal JSON string.
+    pub fn into_string(self) -> String {
+        self.data
     }
 }
 
@@ -103,5 +113,30 @@ mod tests {
 
         assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
         assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+    }
+
+    /// Test that as_str returns the internal JSON string
+    #[test]
+    fn test_as_str_access() {
+        let raw_json = r#"{
+            "name": "John",
+            "age": 30
+        }"#;
+        let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
+
+        assert_eq!(owned_value.owned_as_str(), raw_json);
+    }
+
+    /// Test that into_string returns the internal JSON string and consumes self
+    #[test]
+    fn test_into_string() {
+        let raw_json = r#"{
+            "name": "John",
+            "age": 30
+        }"#;
+        let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
+
+        let as_string = owned_value.into_string();
+        assert_eq!(as_string, raw_json);
     }
 }

@@ -82,6 +82,7 @@ mod index;
 mod num;
 mod object_vec;
 mod ownedvalue;
+mod reusable;
 mod ser;
 mod value;
 
@@ -91,4 +92,5 @@ mod cowstr;
 pub use num::Number;
 pub use object_vec::{KeyStrType, ObjectAsVec, ObjectAsVec as Map, ObjectEntry};
 pub use ownedvalue::OwnedValue;
+pub use reusable::{BorrowedMap, ReusableMap};
 pub use value::Value;

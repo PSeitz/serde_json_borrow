@@ -32,15 +32,15 @@ use super::Value;
 /// assert_eq!(data.get("a"), &Value::Null);
 /// assert_eq!(data.get("a").get("b"), &Value::Null);
 /// ```
-pub trait Index<'v> {
+pub trait Index {
     /// Return None if the key is not already in the array or object.
     #[doc(hidden)]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>>;
+    fn index_into<'a, 'ctx>(self, v: &'a Value<'ctx>) -> Option<&'a Value<'ctx>>;
 }
 
-impl<'v> Index<'v> for usize {
+impl Index for usize {
     #[inline]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>> {
+    fn index_into<'a, 'ctx>(self, v: &'a Value<'ctx>) -> Option<&'a Value<'ctx>> {
         match v {
             Value::Array(vec) => vec.get(self),
             _ => None,
@@ -48,12 +48,29 @@ impl<'v> Index<'v> for usize {
     }
 }
 
-impl<'v, 'a: 'v> Index<'v> for &'a str {
+impl Index for &str {
     #[inline]
-    fn index_into(self, v: &'v Value<'v>) -> Option<&'v Value<'v>> {
+    fn index_into<'a, 'ctx>(self, v: &'a Value<'ctx>) -> Option<&'a Value<'ctx>> {
         match v {
             Value::Object(map) => map.iter().find(|(k, _v)| k == &self).map(|(_k, v)| v),
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn index_lifetime() {
+        fn get_str<'a>(v: &'a Value<'_>, k: &str) -> Option<&'a str> {
+            v.get(k).as_str()
+        }
+        let key = String::from("key");
+        let value = Value::Object(
+            vec![(key.as_str().into(), Value::Str("value".into()))].into()
+        );
+        assert_eq!(get_str(&value, &key), Some("value"));
     }
 }

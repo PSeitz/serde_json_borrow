@@ -109,7 +109,7 @@ impl<'ctx> Value<'ctx> {
     /// assert_eq!(data.get("a").get("b"), &Value::Null);
     /// ```
     #[inline]
-    pub fn get<I: Index<'ctx>>(&'ctx self, index: I) -> &'ctx Value<'ctx> {
+    pub fn get<I: Index>(&self, index: I) -> &Value<'ctx> {
         static NULL: Value = Value::Null;
         index.index_into(self).unwrap_or(&NULL)
     }

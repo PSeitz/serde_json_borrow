@@ -32,12 +32,12 @@
 //!     let data: &str = r#"{"bool": true, "key": "123"}"#;
 //!     // Note that serde_json_borrow::Value<'ctx> is tied to the lifetime of data.
 //!     let value: serde_json_borrow::Value = serde_json::from_str(&data)?;
-//!     assert_eq!(value.get("bool"), &serde_json_borrow::Value::Bool(true));
-//!     assert_eq!(value.get("key"), &serde_json_borrow::Value::Str("123".into()));
+//!     assert_eq!(value.get("bool"), Some(&serde_json_borrow::Value::Bool(true)));
+//!     assert_eq!(value.get("key"), Some(&serde_json_borrow::Value::Str("123".into())));
 //!     // Using OwnedValue will take ownership of the String.
 //!     let value: serde_json_borrow::OwnedValue = serde_json_borrow::OwnedValue::from_str(&data)?;
-//!     assert_eq!(value.get("bool"), &serde_json_borrow::Value::Bool(true));
-//!     assert_eq!(value.get("key"), &serde_json_borrow::Value::Str("123".into()));
+//!     assert_eq!(value.get("bool"), Some(&serde_json_borrow::Value::Bool(true)));
+//!     assert_eq!(value.get("key"), Some(&serde_json_borrow::Value::Str("123".into())));
 //!     Ok(())
 //! }
 //! ```

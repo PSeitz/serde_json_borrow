@@ -175,14 +175,14 @@ mod tests {
        "#;
 
         let val: Value = serde_json::from_str(json_obj).unwrap();
-        assert_eq!(val.get("bool"), &Value::Bool(true));
+        assert_eq!(val.get("bool"), Some(&Value::Bool(true)));
         assert_eq!(
             val.get("string_key"),
-            &Value::Str(Cow::Borrowed("string_val"))
+            Some(&Value::Str(Cow::Borrowed("string_val")))
         );
-        assert_eq!(val.get("float"), &Value::Number(1.23.into()));
-        assert_eq!(val.get("i64"), &Value::Number((-123i64).into()));
-        assert_eq!(val.get("u64"), &Value::Number(123u64.into()));
+        assert_eq!(val.get("float"), Some(&Value::Number(1.23.into())));
+        assert_eq!(val.get("i64"), Some(&Value::Number((-123i64).into())));
+        assert_eq!(val.get("u64"), Some(&Value::Number(123u64.into())));
     }
 
     #[test]
@@ -196,10 +196,10 @@ mod tests {
        "#;
 
         let val: Value = serde_json::from_str(json_obj).unwrap();
-        assert_eq!(val.get("bool"), &Value::Bool(true));
+        assert_eq!(val.get("bool"), Some(&Value::Bool(true)));
         assert_eq!(
             val.get("string_key"),
-            &Value::Str(Cow::Borrowed("string\"_val"))
+            Some(&Value::Str(Cow::Borrowed("string\"_val")))
         );
     }
 }

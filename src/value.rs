@@ -16,8 +16,8 @@ pub use crate::object_vec::ObjectAsVec;
 /// fn main() -> io::Result<()> {
 ///     let data = r#"{"bool": true, "key": "123"}"#;
 ///     let value: Value = serde_json::from_str(&data)?;
-///     assert_eq!(value.get("bool"), &Value::Bool(true));
-///     assert_eq!(value.get("key"), &Value::Str("123".into()));
+///     assert_eq!(value.get("bool"), Some(&Value::Bool(true)));
+///     assert_eq!(value.get("key"), Some(&Value::Str("123".into())));
 ///     Ok(())
 /// }
 /// ```
@@ -72,7 +72,7 @@ pub enum Value<'ctx> {
     /// # use serde_json_borrow::Value;
     /// # use serde_json_borrow::ObjectAsVec;
     /// #
-    /// let v = Value::Object([("key".into(), Value::Str("value".into()))].into_iter().collect::<Vec<_>>().into());
+    /// let v = Value::Object([("key", Value::Str("value".into()))].into());
     /// ```
     Object(ObjectAsVec<'ctx>),
 }
@@ -83,8 +83,7 @@ impl<'ctx> Value<'ctx> {
     ///
     /// Returns `Value::Null` if the type of `self` does not match the type of
     /// the index, for example if the index is a string and `self` is an array
-    /// or a number. Also returns `Value::Null` if the given key does not exist
-    /// in the map or the given index is not within the bounds of the array.
+    /// or a number.
     ///
     /// # Examples
     ///
@@ -100,18 +99,16 @@ impl<'ctx> Value<'ctx> {
     /// "#;
     ///
     /// let data: Value = serde_json::from_str(json_obj).unwrap();
+    /// let y = data.get("x").unwrap().get("y").unwrap();
+    /// assert_eq!(y.get(0), Some(&Value::Str("z".into())));
+    /// assert_eq!(y.get(1), Some(&Value::Str("zz".into())));
+    /// assert_eq!(y.get(2), None);
     ///
-    /// assert_eq!(data.get("x").get("y").get(0), &Value::Str("z".into()));
-    /// assert_eq!(data.get("x").get("y").get(1), &Value::Str("zz".into()));
-    /// assert_eq!(data.get("x").get("y").get(2), &Value::Null);
-    ///
-    /// assert_eq!(data.get("a"), &Value::Null);
-    /// assert_eq!(data.get("a").get("b"), &Value::Null);
+    /// assert_eq!(data.get("a"), None);
     /// ```
     #[inline]
-    pub fn get<I: Index<'ctx>>(&'ctx self, index: I) -> &'ctx Value<'ctx> {
-        static NULL: Value = Value::Null;
-        index.index_into(self).unwrap_or(&NULL)
+    pub fn get<I: Index>(&self, index: I) -> Option<&Value<'ctx>> {
+        index.index_into(self)
     }
 
     /// Returns true if `Value` is Value::Null.
@@ -196,8 +193,24 @@ impl<'ctx> Value<'ctx> {
         }
     }
 
+    /// If the Value is an Array, returns the associated Array. Returns None otherwise.
+    pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value<'ctx>>> {
+        match self {
+            Value::Array(arr) => Some(arr),
+            _ => None,
+        }
+    }
+
     /// If the Value is an Object, returns the associated Object. Returns None otherwise.
     pub fn as_object(&self) -> Option<&ObjectAsVec<'ctx>> {
+        match self {
+            Value::Object(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    /// If the Value is an Object, returns the associated Object. Returns None otherwise.
+    pub fn as_object_mut(&mut self) -> Option<&mut ObjectAsVec<'ctx>> {
         match self {
             Value::Object(obj) => Some(obj),
             _ => None,
@@ -260,6 +273,28 @@ impl<'a> From<&'a str> for Value<'a> {
 impl From<String> for Value<'_> {
     fn from(val: String) -> Self {
         Value::Str(Cow::Owned(val))
+    }
+}
+
+impl<'ctx> From<Cow<'ctx, str>> for Value<'ctx> {
+    fn from(value: Cow<'ctx, str>) -> Self {
+        Value::Str(value)
+    }
+}
+
+impl<'ctx, T> From<T> for Value<'ctx> where T: Into<ObjectAsVec<'ctx>> {
+    fn from(value: T) -> Self {
+        Value::Object(value.into())
+    }
+}
+
+impl<'ctx, K, V> FromIterator<(K, V)> for Value<'ctx>
+where
+    K: Into<crate::KeyStrType<'ctx>>,
+    V: Into<Value<'ctx>>
+{
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        Self::Object(ObjectAsVec::from_iter(iter))
     }
 }
 
@@ -377,7 +412,7 @@ impl<'ctx> From<&'ctx serde_json::Value> for Value<'ctx> {
             serde_json::Value::Object(obj) => {
                 let mut ans = ObjectAsVec::default();
                 for (k, v) in obj {
-                    ans.insert(k.as_str(), v.into());
+                    ans.insert(k.as_str(), v);
                 }
                 Value::Object(ans)
             }
@@ -392,6 +427,60 @@ mod tests {
     use super::*;
 
     #[test]
+    fn as_array() {
+        let value = Value::Null;
+        assert_eq!(value.as_array(), None);
+        let arr = vec![Value::from("value")];
+        let mut value = Value::from(arr.clone());
+        assert_eq!(value.as_object(), None);
+        assert_eq!(value.as_array(), Some(arr.as_slice()));
+
+        let arr = value.as_array_mut().expect("mutable array");
+        arr.push("value2".into());
+        assert_eq!(value.get(1).and_then(Value::as_str), Some("value2"));
+    }
+
+    #[test]
+    fn as_object() {
+        let value = Value::Null;
+        assert_eq!(value.as_object(), None);
+        let obj = ObjectAsVec::from([("key", "value")]);
+        let mut value = Value::from(obj.clone());
+        assert_eq!(value.as_array(), None);
+        assert_eq!(value.as_object(), Some(&obj));
+
+        let obj = value.as_object_mut().expect("mutable object");
+        obj.insert("key2", "value2");
+        assert_eq!(value.get("key2").and_then(Value::as_str), Some("value2"));
+    }
+
+    #[test]
+    fn from_cow() {
+        let value = Value::from(Cow::Borrowed("moo"));
+        assert_eq!(value.as_str(), Some("moo"));
+    }
+
+    #[test]
+    fn from_string() {
+        let value = Value::from(String::from("str"));
+        assert_eq!(value.as_str(), Some("str"));
+    }
+
+    #[test]
+    fn from_into_object() {
+        let value = Value::from([("a", Value::from("av")), ("b", 1.0.into())]);
+        assert_eq!(value.get("a").and_then(Value::as_str), Some("av"));
+        assert_eq!(value.get("b").and_then(Value::as_f64), Some(1.0));
+    }
+
+    #[test]
+    fn from_iter() {
+        let value = Value::from_iter([("a", Value::from("av")), ("b", 1.0.into())]);
+        assert_eq!(value.get("a").and_then(Value::as_str), Some("av"));
+        assert_eq!(value.get("b").and_then(Value::as_f64), Some(1.0));
+    }
+
+    #[test]
     fn from_serde() {
         let value = &serde_json::json!({
             "a": 1,
@@ -401,40 +490,40 @@ mod tests {
         });
 
         let value: Value = value.into();
-        assert_eq!(value.get("a"), &Value::Number(1i64.into()));
-        assert_eq!(value.get("b"), &Value::Str("2".into()));
-        assert_eq!(value.get("c").get(0), &Value::Number(3i64.into()));
-        assert_eq!(value.get("c").get(1), &Value::Number(4i64.into()));
-        assert_eq!(value.get("d").get("e"), &Value::Str("alo".into()));
+        assert_eq!(value.get("a"), Some(&Value::Number(1i64.into())));
+        assert_eq!(value.get("b"), Some(&Value::Str("2".into())));
+        assert_eq!(value.get("c").unwrap().get(0), Some(&Value::Number(3i64.into())));
+        assert_eq!(value.get("c").unwrap().get(1), Some(&Value::Number(4i64.into())));
+        assert_eq!(value.get("d").unwrap().get("e"), Some(&Value::Str("alo".into())));
     }
 
     #[test]
     fn number_test() -> io::Result<()> {
         let data = r#"{"val1": 123.5, "val2": 123, "val3": -123}"#;
         let value: Value = serde_json::from_str(data)?;
-        assert!(value.get("val1").is_f64());
-        assert!(!value.get("val1").is_u64());
-        assert!(!value.get("val1").is_i64());
+        assert!(value.get("val1").unwrap().is_f64());
+        assert!(!value.get("val1").unwrap().is_u64());
+        assert!(!value.get("val1").unwrap().is_i64());
 
-        assert!(!value.get("val2").is_f64());
-        assert!(value.get("val2").is_u64());
-        assert!(value.get("val2").is_i64());
+        assert!(!value.get("val2").unwrap().is_f64());
+        assert!(value.get("val2").unwrap().is_u64());
+        assert!(value.get("val2").unwrap().is_i64());
 
-        assert!(!value.get("val3").is_f64());
-        assert!(!value.get("val3").is_u64());
-        assert!(value.get("val3").is_i64());
+        assert!(!value.get("val3").unwrap().is_f64());
+        assert!(!value.get("val3").unwrap().is_u64());
+        assert!(value.get("val3").unwrap().is_i64());
 
-        assert!(value.get("val1").as_f64().is_some());
-        assert!(value.get("val2").as_f64().is_some());
-        assert!(value.get("val3").as_f64().is_some());
+        assert!(value.get("val1").unwrap().as_f64().is_some());
+        assert!(value.get("val2").unwrap().as_f64().is_some());
+        assert!(value.get("val3").unwrap().as_f64().is_some());
 
-        assert!(value.get("val1").as_u64().is_none());
-        assert!(value.get("val2").as_u64().is_some());
-        assert!(value.get("val3").as_u64().is_none());
+        assert!(value.get("val1").unwrap().as_u64().is_none());
+        assert!(value.get("val2").unwrap().as_u64().is_some());
+        assert!(value.get("val3").unwrap().as_u64().is_none());
 
-        assert!(value.get("val1").as_i64().is_none());
-        assert!(value.get("val2").as_i64().is_some());
-        assert!(value.get("val3").as_i64().is_some());
+        assert!(value.get("val1").unwrap().as_i64().is_none());
+        assert!(value.get("val2").unwrap().as_i64().is_some());
+        assert!(value.get("val3").unwrap().as_i64().is_some());
 
         Ok(())
     }

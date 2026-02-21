@@ -25,23 +25,34 @@ pub type KeyStrType<'a> = &'a str;
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct ObjectAsVec<'ctx>(pub(crate) Vec<(KeyStrType<'ctx>, Value<'ctx>)>);
 
-#[cfg(feature = "cowkeys")]
-impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
-    fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
+impl<'ctx, K, V> From<Vec<(K, V)>> for ObjectAsVec<'ctx>
+where
+    K: Into<KeyStrType<'ctx>>,
+    V: Into<Value<'ctx>>,
+{
+    fn from(vec: Vec<(K, V)>) -> Self {
         Self::from_iter(vec)
     }
 }
 
-#[cfg(not(feature = "cowkeys"))]
-impl<'ctx> From<Vec<(&'ctx str, Value<'ctx>)>> for ObjectAsVec<'ctx> {
-    fn from(vec: Vec<(&'ctx str, Value<'ctx>)>) -> Self {
-        Self(vec)
+impl<'ctx, K, V, const N: usize> From<[(K, V); N]> for ObjectAsVec<'ctx>
+where
+    K: Into<KeyStrType<'ctx>>,
+    V: Into<Value<'ctx>>
+{
+    #[inline]
+    fn from(value: [(K, V); N]) -> Self {
+        Self::from_iter(value)
     }
 }
 
-impl<'ctx> FromIterator<(&'ctx str, Value<'ctx>)> for ObjectAsVec<'ctx> {
-    fn from_iter<T: IntoIterator<Item = (&'ctx str, Value<'ctx>)>>(iter: T) -> Self {
-        Self(iter.into_iter().map(|(k, v)| (k.into(), v)).collect())
+impl<'ctx, K, V> FromIterator<(K, V)> for ObjectAsVec<'ctx>
+where
+    K: Into<KeyStrType<'ctx>>,
+    V: Into<Value<'ctx>>
+{
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        Self(iter.into_iter().map(|(k, v)| (k.into(), v.into())).collect())
     }
 }
 
@@ -212,14 +223,20 @@ impl<'ctx> ObjectAsVec<'ctx> {
     /// This operation is linear in the size of the Vec because it potentially requires iterating
     /// through all elements to find a matching key.
     #[inline]
-    pub fn insert(&mut self, key: &'ctx str, value: Value<'ctx>) -> Option<Value<'ctx>> {
+    pub fn insert<K, V>(&mut self, key: K, value: V) -> Option<Value<'ctx>>
+    where
+        K: Into<KeyStrType<'ctx>>,
+        V: Into<Value<'ctx>>,
+    {
+        let key = key.into();
+        let value = value.into();
         for (k, v) in &mut self.0 {
             if *k == key {
                 return Some(std::mem::replace(v, value));
             }
         }
         // If the key is not found, push the new key-value pair to the end of the Vec
-        self.0.push((key.into(), value));
+        self.0.push((key, value));
         None
     }
 
@@ -307,11 +324,25 @@ mod tests {
     }
 
     #[test]
+    fn test_initialization_from_array() {
+        let obj = ObjectAsVec::from([
+            ("a", 0u64),
+            ("b", 1u64),
+            ("c", 2u64),
+        ]);
+
+        assert_eq!(obj.len(), 3);
+        assert_eq!(obj.get("a"), Some(&Value::Number(0u64.into())));
+        assert_eq!(obj.get("b"), Some(&Value::Number(1u64.into())));
+        assert_eq!(obj.get("c"), Some(&Value::Number(2u64.into())));
+    }
+
+    #[test]
     fn test_initialization_from_vec() {
         let obj = ObjectAsVec::from(vec![
-            ("a", Value::Number(0u64.into())),
-            ("b", Value::Number(1u64.into())),
-            ("c", Value::Number(2u64.into())),
+            ("a", 0u64),
+            ("b", 1u64),
+            ("c", 2u64),
         ]);
 
         assert_eq!(obj.len(), 3);
@@ -441,7 +472,7 @@ mod tests {
     fn test_insert_multiple_types() {
         let mut obj = ObjectAsVec::default();
         obj.insert("boolean", Value::Bool(true));
-        obj.insert("number", Value::Number(3.14.into()));
+        obj.insert("number", Value::Number(1.23.into()));
         obj.insert("string", Value::Str(Cow::Borrowed("Hello")));
         obj.insert("null", Value::Null);
 
@@ -454,7 +485,7 @@ mod tests {
         );
         assert_eq!(obj.len(), 5);
         assert_eq!(obj.get("boolean"), Some(&Value::Bool(true)));
-        assert_eq!(obj.get("number"), Some(&Value::Number(3.14.into())));
+        assert_eq!(obj.get("number"), Some(&Value::Number(1.23.into())));
         assert_eq!(obj.get("string"), Some(&Value::Str(Cow::Borrowed("Hello"))));
         assert_eq!(obj.get("null"), Some(&Value::Null));
         assert_eq!(
@@ -516,7 +547,7 @@ mod tests {
             .unwrap();
 
         // ensure that the found object matches the searched for object
-        let (key, value) = obj.get_key_value_at(idx).unwrap();
+        let (key, _) = obj.get_key_value_at(idx).unwrap();
         assert_eq!(key, "city");
     }
 }

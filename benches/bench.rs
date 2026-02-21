@@ -190,11 +190,11 @@ fn access_json_borrowed(el: &OwnedValue, access: &[&[&str]]) -> usize {
     let mut total_size = 0;
     for access in access {
         // walk the access keys until the end. return 0 if value does not exist
-        let mut val = el.get_value();
+        let mut val = Some(el.get_value());
         for key in *access {
-            val = val.get(*key);
+            val = val.and_then(|v| v.get(key));
         }
-        if let Some(v) = val.as_str() {
+        if let Some(val) = val && let Some(v) = val.as_str() {
             total_size += v.len();
         }
     }

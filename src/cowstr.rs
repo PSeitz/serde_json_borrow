@@ -31,8 +31,32 @@ impl<'a> From<&'a str> for CowStr<'a> {
     }
 }
 
+impl From<String> for CowStr<'_> {
+    fn from(s: String) -> Self {
+        Self(Cow::Owned(s))
+    }
+}
+
+impl<'a> From<Cow<'a, str>> for CowStr<'a> {
+    fn from(s: Cow<'a, str>) -> Self {
+        Self(s)
+    }
+}
+
 impl<'a> From<CowStr<'a>> for Cow<'a, str> {
     fn from(s: CowStr<'a>) -> Self {
         s.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from() {
+        assert_eq!(CowStr::from("text"), "text");
+        assert_eq!(CowStr::from(Cow::Borrowed("text")), "text");
+        assert_eq!(CowStr::from(String::from("text")), "text");
     }
 }

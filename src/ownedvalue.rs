@@ -19,8 +19,8 @@ use crate::Value;
 /// use serde_json_borrow::Value;
 /// let raw_json = r#"{"name": "John", "age": 30}"#;
 /// let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
-/// assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
-/// assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+/// assert_eq!(owned_value.get("name"), Some(&Value::Str("John".into())));
+/// assert_eq!(owned_value.get("age"), Some(&Value::Number(30_u64.into())));
 /// ```
 ///
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
@@ -77,7 +77,7 @@ impl Deref for OwnedValue {
 }
 
 unsafe fn extend_lifetime<'b>(r: Value<'b>) -> Value<'static> {
-    std::mem::transmute::<Value<'b>, Value<'static>>(r)
+    unsafe { std::mem::transmute::<Value<'b>, Value<'static>>(r) }
 }
 
 #[cfg(test)]
@@ -90,8 +90,8 @@ mod tests {
         let raw_json = r#"{"name": "John", "age": 30}"#;
         let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
 
-        assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
-        assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+        assert_eq!(owned_value.get("name"), Some(&Value::Str("John".into())));
+        assert_eq!(owned_value.get("age"), Some(&Value::Number(30_u64.into())));
     }
 
     /// Test that clone clones OwnedValue
@@ -101,7 +101,7 @@ mod tests {
         let owned_value = OwnedValue::from_string(raw_json.to_string()).unwrap();
         let owned_value = owned_value.clone();
 
-        assert_eq!(owned_value.get("name"), &Value::Str("John".into()));
-        assert_eq!(owned_value.get("age"), &Value::Number(30_u64.into()));
+        assert_eq!(owned_value.get("name"), Some(&Value::Str("John".into())));
+        assert_eq!(owned_value.get("age"), Some(&Value::Number(30_u64.into())));
     }
 }

@@ -51,7 +51,7 @@ fn parse_bench() {
         runner.set_name(name);
 
         let access = get_access_for_input_name(name);
-        runner.register("serde_json", move |_data| {
+        runner.register("serde_json parse only", move |_data| {
             let mut val = None;
             for line in input_gen() {
                 let json: serde_json::Value = serde_json::from_str(&line).unwrap();
@@ -60,7 +60,7 @@ fn parse_bench() {
             black_box(val);
         });
 
-        runner.register("serde_json + access by key", move |_data| {
+        runner.register("serde_json access by key", move |_data| {
             let mut total_size = 0;
             for line in input_gen() {
                 let json: serde_json::Value = serde_json::from_str(&line).unwrap();
@@ -68,7 +68,7 @@ fn parse_bench() {
             }
             black_box(total_size);
         });
-        runner.register("serde_json_borrow::OwnedValue", move |_data| {
+        runner.register("serde_json_borrow::OwnedValue parse only", move |_data| {
             let mut val = None;
             for line in input_gen() {
                 let json: OwnedValue = OwnedValue::parse_from(line).unwrap();
@@ -78,7 +78,7 @@ fn parse_bench() {
         });
 
         runner.register(
-            "serde_json_borrow::OwnedValue + access by key",
+            "serde_json_borrow::OwnedValue access by key",
             move |_data| {
                 let mut total_size = 0;
                 for line in input_gen() {
@@ -89,13 +89,22 @@ fn parse_bench() {
             },
         );
 
-        runner.register("SIMD_json_borrow", move |_data| {
+        runner.register("serde_json_borrow::ReusableMap parse only", move |_data| {
+            let mut map = serde_json_borrow::ReusableMap::new();
+            for line in input_gen() {
+                let parsed = map.deserialize(&line).unwrap();
+                black_box(parsed);
+            }
+        });
+
+        runner.register("SIMD_json_borrow parse only", move |_data| {
             for line in input_gen() {
                 let mut data: Vec<u8> = line.into();
                 let v: simd_json::BorrowedValue = simd_json::to_borrowed_value(&mut data).unwrap();
                 black_box(v);
             }
         });
+
         runner.run();
     }
 }

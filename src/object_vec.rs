@@ -68,6 +68,22 @@ impl<'ctx> ObjectAsVec<'ctx> {
         &self.0
     }
 
+    /// Returns a mutable reference to the underlying vector without allocating or cloning.
+    ///
+    /// Entries can be moved out, reordered, or appended. This method does not sort entries
+    /// or remove duplicate keys. Iteration and serialization follow the vector's order;
+    /// key lookups return the first matching entry.
+    ///
+    /// # Note
+    /// The key type depends on the `cowkeys` feature: [`KeyStrType`] is `&str` without
+    /// it and a `Cow<str>` wrapper with it. Cargo feature unification can enable
+    /// `cowkeys` through another dependency. Use the other mutation methods when
+    /// access to the native vector is not needed.
+    #[inline]
+    pub fn as_vec_mut(&mut self) -> &mut Vec<(KeyStrType<'ctx>, Value<'ctx>)> {
+        &mut self.0
+    }
+
     /// Access to the underlying Vec. Keys are normalized to Cow.
     #[inline]
     pub fn into_vec(self) -> Vec<(Cow<'ctx, str>, Value<'ctx>)> {
@@ -308,6 +324,9 @@ impl<'ctx> From<&ObjectAsVec<'ctx>> for serde_json::Map<String, serde_json::Valu
             .collect()
     }
 }
+
+#[cfg(test)]
+mod as_vec_mut_tests;
 
 #[cfg(test)]
 mod tests {
